@@ -1,0 +1,221 @@
+import React, { useEffect, useState } from 'react';
+import { Package, ShoppingBag, DollarSign, TrendingUp, Loader2 } from 'lucide-react';
+import { getSellerProducts } from '../../../services/productService';
+import { getSellerOrders } from '../../../services/orderService';
+import { getSellerEarnings } from '../../../services/adminService';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+interface DashboardStats {
+  totalProducts: number;
+  ordersToday: number;
+  todayEarnings: number;
+  monthlyEarnings: number;
+}
+
+export const ShopOwnerDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    ordersToday: 0,
+    todayEarnings: 0,
+    monthlyEarnings: 0
+  });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch products
+      const products = await getSellerProducts();
+      
+      // Fetch orders
+      const orders = await getSellerOrders();
+      
+      // Fetch earnings
+      const earnings = await getSellerEarnings();
+
+      // Calculate today's orders and earnings
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todayOrders = orders.filter((order: any) => {
+        const orderDate = new Date(order.createdAt);
+        orderDate.setHours(0, 0, 0, 0);
+        return orderDate.getTime() === today.getTime();
+      });
+
+      const todayEarnings = todayOrders
+        .filter((order: any) => order.orderStatus === 'Delivered')
+        .reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+
+      // Get current month earnings
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyEarning = earnings.monthlyEarnings.find(
+        (m: any) => m._id.month === currentMonth + 1 && m._id.year === currentYear
+      );
+
+      setStats({
+        totalProducts: products.length,
+        ordersToday: todayOrders.length,
+        todayEarnings: todayEarnings,
+        monthlyEarnings: monthlyEarning ? monthlyEarning.earnings : earnings.totalEarnings
+      });
+
+      // Set recent orders (last 5)
+      setRecentOrders(orders.slice(0, 5));
+
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error(error.response?.data?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'text-orange-600';
+      case 'Accepted': return 'text-blue-600';
+      case 'Packed': return 'text-purple-600';
+      case 'Shipped': return 'text-indigo-600';
+      case 'Delivered': return 'text-green-600';
+      case 'Cancelled': return 'text-red-600';
+      case 'Rejected': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const formatTimeAgo = (date: string) => {
+    const now = new Date();
+    const orderDate = new Date(date);
+    const diffMs = now.getTime() - orderDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    return `${diffDays} days ago`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Shop Owner Dashboard</h1>
+        <p className="text-gray-600">Monitor your shop's performance</p>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-green-100 p-4 rounded-xl">
+              <Package className="h-8 w-8 text-green-600" />
+            </div>
+            <TrendingUp className="h-5 w-5 text-green-600" />
+          </div>
+          <p className="text-gray-600 text-sm mb-1">Total Products</p>
+          <p className="text-3xl font-bold text-gray-800">{stats.totalProducts}</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-blue-100 p-4 rounded-xl">
+              <ShoppingBag className="h-8 w-8 text-blue-600" />
+            </div>
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+          </div>
+          <p className="text-gray-600 text-sm mb-1">Orders Today</p>
+          <p className="text-3xl font-bold text-gray-800">{stats.ordersToday}</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-orange-100 p-4 rounded-xl">
+              <DollarSign className="h-8 w-8 text-orange-600" />
+            </div>
+            <TrendingUp className="h-5 w-5 text-orange-600" />
+          </div>
+          <p className="text-gray-600 text-sm mb-1">Today's Earnings</p>
+          <p className="text-3xl font-bold text-gray-800">₹{stats.todayEarnings.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-purple-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-purple-100 p-4 rounded-xl">
+              <DollarSign className="h-8 w-8 text-purple-600" />
+            </div>
+            <TrendingUp className="h-5 w-5 text-purple-600" />
+          </div>
+          <p className="text-gray-600 text-sm mb-1">Monthly Earnings</p>
+          <p className="text-3xl font-bold text-gray-800">₹{stats.monthlyEarnings.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Recent Orders</h2>
+          <button
+            onClick={() => navigate('/shop-owner/orders')}
+            className="text-green-600 hover:text-green-700 font-semibold text-sm"
+          >
+            View All →
+          </button>
+        </div>
+        <div className="space-y-4">
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <ShoppingBag className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <p>No orders yet</p>
+            </div>
+          ) : (
+            recentOrders.map((order) => (
+              <div
+                key={order._id}
+                onClick={() => navigate(`/shop-owner/orders`)}
+                className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <ShoppingBag className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">
+                      Order #{order._id.slice(-6).toUpperCase()}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {order.products.length} items • ₹{order.totalAmount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-semibold ${getStatusColor(order.orderStatus)}`}>
+                    {order.orderStatus}
+                  </p>
+                  <p className="text-xs text-gray-500">{formatTimeAgo(order.createdAt)}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
