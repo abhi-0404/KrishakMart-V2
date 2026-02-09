@@ -2,6 +2,7 @@ import Order from '../models/Order.model.js';
 import Cart from '../models/Cart.model.js';
 import Product from '../models/Product.model.js';
 import User from '../models/User.model.js';
+import { createNotification } from './notification.controller.js';
 
 // @desc    Create order
 // @route   POST /api/orders
@@ -76,6 +77,23 @@ export const createOrder = async (req, res) => {
     await Cart.findOneAndUpdate(
       { farmerId: req.user._id },
       { items: [] }
+    );
+
+    // Create notifications
+    await createNotification(
+      firstProduct.sellerId,
+      'order_placed',
+      'New Order Received',
+      `You have received a new order #${order._id.toString().slice(-6)} worth ₹${totalAmount}`,
+      order._id
+    );
+
+    await createNotification(
+      req.user._id,
+      'order_placed',
+      'Order Placed Successfully',
+      `Your order #${order._id.toString().slice(-6)} has been placed successfully`,
+      order._id
     );
 
     res.status(201).json({
@@ -214,6 +232,33 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    // Create notifications
+    let notificationType = 'order_accepted';
+    let notificationTitle = 'Order Status Updated';
+    let notificationMessage = `Your order #${order._id.toString().slice(-6)} status: ${status}`;
+
+    if (status === 'Shipped') {
+      notificationType = 'order_shipped';
+      notificationTitle = 'Order Shipped';
+      notificationMessage = `Your order #${order._id.toString().slice(-6)} has been shipped`;
+    } else if (status === 'Delivered') {
+      notificationType = 'order_delivered';
+      notificationTitle = 'Order Delivered';
+      notificationMessage = `Your order #${order._id.toString().slice(-6)} has been delivered`;
+    } else if (status === 'Rejected') {
+      notificationType = 'order_rejected';
+      notificationTitle = 'Order Rejected';
+      notificationMessage = `Your order #${order._id.toString().slice(-6)} has been rejected`;
+    }
+
+    await createNotification(
+      order.farmerId,
+      notificationType,
+      notificationTitle,
+      notificationMessage,
+      order._id
+    );
 
     res.json({
       success: true,

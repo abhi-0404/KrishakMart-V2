@@ -88,9 +88,18 @@ export const getProduct = async (req, res) => {
 // @access  Private (Shop Owner)
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, brand, price, stock, description, usage, images } = req.body;
+    const { name, category, brand, price, stock, description, usage } = req.body;
 
     const seller = await User.findById(req.user._id);
+
+    // Handle image uploads
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => `/uploads/products/${file.filename}`);
+    } else if (req.body.images) {
+      // If images are provided as URLs (for testing)
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
 
     const product = await Product.create({
       name,
@@ -100,7 +109,7 @@ export const createProduct = async (req, res) => {
       stock,
       description,
       usage,
-      images: images || [],
+      images,
       sellerId: req.user._id,
       shopOwner: seller.shopName || seller.name,
       isAvailable: stock > 0
@@ -139,6 +148,12 @@ export const updateProduct = async (req, res) => {
         success: false,
         message: 'Not authorized to update this product'
       });
+    }
+
+    // Handle new image uploads
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(file => `/uploads/products/${file.filename}`);
+      req.body.images = [...(product.images || []), ...newImages];
     }
 
     // Update availability based on stock

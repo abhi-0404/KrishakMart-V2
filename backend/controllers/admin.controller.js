@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.model.js';
 import Product from '../models/Product.model.js';
 import Order from '../models/Order.model.js';
@@ -189,10 +190,11 @@ export const getDashboardStats = async (req, res) => {
 
 // @desc    Get seller earnings
 // @route   GET /api/admin/seller/:id/earnings
+// @route   GET /api/admin/seller/earnings
 // @access  Private (Shop Owner/Admin)
 export const getSellerEarnings = async (req, res) => {
   try {
-    const sellerId = req.params.id || req.user._id;
+    const sellerId = req.params.id || req.user._id.toString();
 
     // Check authorization
     if (req.user.role === 'shopOwner' && sellerId !== req.user._id.toString()) {
@@ -214,7 +216,7 @@ export const getSellerEarnings = async (req, res) => {
     const monthlyEarnings = await Order.aggregate([
       {
         $match: {
-          sellerId: req.user._id,
+          sellerId: new mongoose.Types.ObjectId(sellerId),
           orderStatus: 'Delivered',
           createdAt: {
             $gte: new Date(new Date().setMonth(new Date().getMonth() - 6))
