@@ -12,11 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { categories } from '../../data/mockData';
+import { categories } from '../../../services/productService';
+import { createProduct } from '../../../services/productService';
 import { toast } from 'sonner';
 
 export const AdminAddProduct: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState({
     name: '',
     category: '',
@@ -26,11 +28,51 @@ export const AdminAddProduct: React.FC = () => {
     description: '',
     usage: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Admin product added successfully!');
-    navigate('/admin/my-products');
+    
+    if (!product.name || !product.category || !product.brand || !product.price || !product.stock || !product.description) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const formData = new FormData();
+      formData.append('name', product.name);
+      formData.append('category', product.category);
+      formData.append('brand', product.brand);
+      formData.append('price', product.price);
+      formData.append('stock', product.stock);
+      formData.append('description', product.description);
+      if (product.usage) formData.append('usage', product.usage);
+      if (imageFile) formData.append('image', imageFile);
+
+      await createProduct(formData);
+      toast.success('Admin product added successfully!');
+      navigate('/admin/my-products');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to add product');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,14 +120,11 @@ export const AdminAddProduct: React.FC = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories?.map((cat) => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.icon} {cat.name}
                     </SelectItem>
-                  )) || [
-                    <SelectItem key="seeds" value="seeds">Seeds</SelectItem>,
-                    <SelectItem key="tools" value="tools">Tools</SelectItem>
-                  ]}
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -151,23 +190,59 @@ export const AdminAddProduct: React.FC = () => {
             />
           </div>
 
+          {/* Usage Instructions */}
+          <div>
+            <Label htmlFor="usage" className="text-base">Usage Instructions (Optional)</Label>
+            <Textarea
+              id="usage"
+              value={product.usage}
+              onChange={(e) => setProduct({ ...product, usage: e.target.value })}
+              placeholder="How to use this product..."
+              className="mt-2 text-base border-2 min-h-[80px]"
+            />
+          </div>
+
           {/* Upload Image */}
           <div>
             <Label htmlFor="image" className="text-base flex items-center gap-2">
               <Image className="h-4 w-4" />
               Product Image
             </Label>
-            <div className="mt-2 border-2 border-dashed border-green-300 rounded-lg p-8 text-center hover:border-green-600 transition-colors cursor-pointer bg-green-50/50">
-              <Image className="h-12 w-12 text-green-600 mx-auto mb-3" />
-              <p className="text-green-800 mb-2 font-medium">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500">Official product images help build trust</p>
-            </div>
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <label
+              htmlFor="image"
+              className="mt-2 border-2 border-dashed border-green-300 rounded-lg p-8 text-center hover:border-green-600 transition-colors cursor-pointer bg-green-50/50 block"
+            >
+              {imagePreview ? (
+                <div className="space-y-3">
+                  <img src={imagePreview} alt="Preview" className="h-32 w-32 object-cover rounded-lg mx-auto border-2 border-green-200" />
+                  <p className="text-green-800 font-medium">Click to change image</p>
+                </div>
+              ) : (
+                <>
+                  <Image className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                  <p className="text-green-800 mb-2 font-medium">Click to upload or drag and drop</p>
+                  <p className="text-sm text-gray-500">Official product images help build trust</p>
+                </>
+              )}
+            </label>
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" size="lg" className="w-full bg-green-700 hover:bg-green-800 gap-2 py-6 text-lg shadow-lg">
+          <Button 
+            type="submit" 
+            size="lg" 
+            className="w-full bg-green-700 hover:bg-green-800 gap-2 py-6 text-lg shadow-lg"
+            disabled={loading}
+          >
             <Save className="h-5 w-5" />
-            Publish as Official Product
+            {loading ? 'Publishing...' : 'Publish as Official Product'}
           </Button>
         </div>
       </form>

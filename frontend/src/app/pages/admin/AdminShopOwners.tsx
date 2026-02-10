@@ -1,49 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Store, Mail, Phone, MapPin, CheckCircle, XCircle, Info, MoreVertical, Ban } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
 
 interface ShopOwner {
-  id: string;
-  shopName: string;
-  ownerName: string;
-  email: string;
+  _id: string;
+  name: string;
+  shopName?: string;
+  email?: string;
   phone: string;
-  location: string;
-  status: 'pending' | 'approved' | 'suspended';
-  totalProducts: number;
-  totalEarnings: number;
+  shopAddress?: string;
+  isBlocked: boolean;
+  createdAt: string;
 }
 
-const mockShopOwners: ShopOwner[] = [
-  { id: '1', shopName: 'Green Valley Seeds', ownerName: 'Rajesh Sharma', email: 'rajesh@greenvalley.com', phone: '+91 91234 56789', location: 'Indore, MP', status: 'approved', totalProducts: 45, totalEarnings: 125000 },
-  { id: '2', shopName: 'Kisan Mitra Fertilizers', ownerName: 'Deepak Patel', email: 'deepak@kisanmitra.com', phone: '+91 82345 67890', location: 'Nagpur, MH', status: 'approved', totalProducts: 28, totalEarnings: 84000 },
-  { id: '3', shopName: 'Agro Tech Tools', ownerName: 'Sanjay Gupta', email: 'sanjay@agrotech.com', phone: '+91 73456 78901', location: 'Jaipur, RJ', status: 'pending', totalProducts: 12, totalEarnings: 0 },
-  { id: '4', shopName: 'Modern Farm Supplies', ownerName: 'Anita Devi', email: 'anita@modernfarm.com', phone: '+91 64567 89012', location: 'Patna, BR', status: 'approved', totalProducts: 67, totalEarnings: 210000 },
-  { id: '5', shopName: 'Soil Care Bio', ownerName: 'Mohit Reddy', email: 'mohit@soilcare.com', phone: '+91 55678 90123', location: 'Hyderabad, TS', status: 'suspended', totalProducts: 15, totalEarnings: 32000 },
-];
-
 export const AdminShopOwners: React.FC = () => {
-  const [shopOwners, setShopOwners] = useState<ShopOwner[]>(mockShopOwners);
+  const [shopOwners, setShopOwners] = useState<ShopOwner[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const filteredOwners = shopOwners.filter(s => 
-    s.shopName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchShopOwners();
+  }, []);
 
-  const updateStatus = (id: string, newStatus: 'approved' | 'suspended') => {
-    setShopOwners(prev => prev.map(s => {
-      if (s.id === id) {
-        toast.success(`Shop "${s.shopName}" is now ${newStatus}`);
-        return { ...s, status: newStatus };
-      }
-      return s;
-    }));
+  const fetchShopOwners = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllUsers('shopOwner');
+      setShopOwners(data);
+    } catch (error) {
+      toast.error('Failed to load shop owners');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const approveShop = (id: string) => updateStatus(id, 'approved');
-  const suspendShop = (id: string) => updateStatus(id, 'suspended');
+  const filteredOwners = shopOwners.filter(s => 
+    (s.shopName && s.shopName.toLowerCase().includes(searchTerm.toLowerCase())) || 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const toggleStatus = async (id: string) => {
+    try {
+      await toggleBlockUser(id);
+      const shop = shopOwners.find(s => s._id === id);
+      toast.success(`Shop "${shop?.shopName}" status updated`);
+      fetchShopOwners();
+    } catch (error) {
+      toast.error('Failed to update shop status');
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading shop owners...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,10 +73,6 @@ export const AdminShopOwners: React.FC = () => {
           <p className="text-gray-600">Review shop applications and manage existing sellers</p>
         </div>
         <div className="flex gap-4">
-          <div className="bg-white px-4 py-2 rounded-lg border-2 border-blue-200 shadow-sm flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-600">Pending:</span>
-            <span className="text-lg font-bold text-blue-700">{shopOwners.filter(s => s.status === 'pending').length}</span>
-          </div>
           <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2">
             <span className="text-sm font-medium text-gray-600">Total Shops:</span>
             <span className="text-lg font-bold text-green-700">{shopOwners.length}</span>
@@ -86,25 +102,28 @@ export const AdminShopOwners: React.FC = () => {
               <tr>
                 <th className="px-6 py-4 font-bold text-green-800">Shop Details</th>
                 <th className="px-6 py-4 font-bold text-green-800">Location</th>
-                <th className="px-6 py-4 font-bold text-green-800">Products</th>
-                <th className="px-6 py-4 font-bold text-green-800">Total Sales</th>
+                <th className="px-6 py-4 font-bold text-green-800">Joined Date</th>
                 <th className="px-6 py-4 font-bold text-green-800">Status</th>
                 <th className="px-6 py-4 font-bold text-green-800 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y-2 divide-gray-100">
               {filteredOwners.map((owner) => (
-                <tr key={owner.id} className="hover:bg-green-50/50 transition-colors">
+                <tr key={owner._id} className="hover:bg-green-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700">
                         <Store className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800">{owner.shopName}</p>
-                        <p className="text-sm text-gray-600">Owner: {owner.ownerName}</p>
+                        <p className="font-bold text-gray-800">{owner.shopName || 'Unnamed Shop'}</p>
+                        <p className="text-sm text-gray-600">Owner: {owner.name}</p>
                         <div className="flex gap-4 mt-1">
-                          <span className="flex items-center gap-1 text-xs text-gray-500"><Mail className="h-3 w-3" /> {owner.email}</span>
+                          {owner.email && (
+                            <span className="flex items-center gap-1 text-xs text-gray-500">
+                              <Mail className="h-3 w-3" /> {owner.email}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -112,53 +131,32 @@ export const AdminShopOwners: React.FC = () => {
                   <td className="px-6 py-4 text-gray-600">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {owner.location}
+                      {owner.shopAddress || 'Not provided'}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-semibold text-gray-800">{owner.totalProducts} items</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-green-700">₹{owner.totalEarnings.toLocaleString()}</span>
+                  <td className="px-6 py-4 text-gray-600">
+                    {new Date(owner.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                      owner.status === 'approved' ? 'bg-green-100 text-green-700' : 
-                      owner.status === 'pending' ? 'bg-blue-100 text-blue-700' : 
-                      'bg-red-100 text-red-700'
+                      !owner.isBlocked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
-                      {owner.status}
+                      {!owner.isBlocked ? 'active' : 'suspended'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
-                      {owner.status === 'pending' && (
-                        <button
-                          onClick={() => approveShop(owner.id)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                          title="Approve Shop"
-                        >
-                          <CheckCircle className="h-5 w-5" />
-                        </button>
-                      )}
-                      {owner.status === 'approved' && (
-                        <button
-                          onClick={() => suspendShop(owner.id)}
-                          className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
-                          title="Suspend Shop"
-                        >
-                          <Ban className="h-5 w-5" />
-                        </button>
-                      )}
-                      {owner.status === 'suspended' && (
-                        <button
-                          onClick={() => approveShop(owner.id)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                          title="Re-activate Shop"
-                        >
-                          <CheckCircle className="h-5 w-5" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => toggleStatus(owner._id)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          !owner.isBlocked 
+                            ? 'text-orange-600 hover:bg-orange-100' 
+                            : 'text-green-600 hover:bg-green-100'
+                        }`}
+                        title={!owner.isBlocked ? 'Suspend Shop' : 'Activate Shop'}
+                      >
+                        {!owner.isBlocked ? <Ban className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+                      </button>
                       <button className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                         <Info className="h-5 w-5" />
                       </button>
@@ -169,6 +167,12 @@ export const AdminShopOwners: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {filteredOwners.length === 0 && (
+          <div className="p-12 text-center text-gray-500">
+            <Store className="h-12 w-12 mx-auto mb-4 opacity-20" />
+            <p className="text-lg">No shop owners found matching your search.</p>
+          </div>
+        )}
       </div>
     </div>
   );
