@@ -30,12 +30,22 @@ const FarmerProfile = lazy(() => import('./pages/farmer/FarmerProfile').then(m =
 const ShopOwnerDashboard = lazy(() => import('./pages/shop-owner/ShopOwnerDashboard').then(m => ({ default: m.ShopOwnerDashboard })));
 const ShopOwnerProducts = lazy(() => import('./pages/shop-owner/ShopOwnerProducts').then(m => ({ default: m.ShopOwnerProducts })));
 const ShopOwnerAddProduct = lazy(() => import('./pages/shop-owner/ShopOwnerAddProduct').then(m => ({ default: m.ShopOwnerAddProduct })));
+const ShopOwnerEditProduct = lazy(() => import('./pages/shop-owner/ShopOwnerEditProduct').then(m => ({ default: m.ShopOwnerEditProduct })));
 const ShopOwnerOrders = lazy(() => import('./pages/shop-owner/ShopOwnerOrders').then(m => ({ default: m.ShopOwnerOrders })));
 const ShopOwnerEarnings = lazy(() => import('./pages/shop-owner/ShopOwnerEarnings').then(m => ({ default: m.ShopOwnerEarnings })));
 const ShopOwnerProfile = lazy(() => import('./pages/shop-owner/ShopOwnerProfile').then(m => ({ default: m.ShopOwnerProfile })));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminFarmers = lazy(() => import('./pages/admin/AdminFarmers').then(m => ({ default: m.AdminFarmers })));
+const AdminShopOwners = lazy(() => import('./pages/admin/AdminShopOwners').then(m => ({ default: m.AdminShopOwners })));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })));
+const AdminOwnProducts = lazy(() => import('./pages/admin/AdminOwnProducts').then(m => ({ default: m.AdminOwnProducts })));
+const AdminAddProduct = lazy(() => import('./pages/admin/AdminAddProduct').then(m => ({ default: m.AdminAddProduct })));
+const AdminOwnEarnings = lazy(() => import('./pages/admin/AdminOwnEarnings').then(m => ({ default: m.AdminOwnEarnings })));
+
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({
@@ -53,6 +63,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string
   }
 
   return <>{children}</>;
+};
+
+// Profile Redirect Component
+const ProfileRedirect: React.FC = () => {
+  const { user } = useApp();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to role-specific profile page
+  switch (user.role) {
+    case 'farmer':
+      return <Navigate to="/farmer/profile" replace />;
+    case 'shopOwner':
+      return <Navigate to="/shop-owner/profile" replace />;
+    case 'admin':
+      return <Navigate to="/admin/dashboard" replace />;
+    default:
+      return <Navigate to="/" replace />;
+  }
 };
 
 // Loading component
@@ -152,6 +183,21 @@ function AppContent() {
         <Route path="/login" element={<Suspense fallback={<LoadingFallback />}><LoginPage /></Suspense>} />
         <Route path="/signup/:userType" element={<Suspense fallback={<LoadingFallback />}><SignupPage /></Suspense>} />
 
+        {/* Profile Route - accessible to all logged-in users */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['farmer', 'shopOwner', 'admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  {/* We'll use role-specific profile components */}
+                  <ProfileRedirect />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Farmer Routes */}
         <Route
           path="/farmer/dashboard"
@@ -240,6 +286,18 @@ function AppContent() {
           }
         />
         <Route
+          path="/shop-owner/edit-product/:id"
+          element={
+            <ProtectedRoute allowedRoles={['shopOwner']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ShopOwnerEditProduct />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/shop-owner/orders"
           element={
             <ProtectedRoute allowedRoles={['shopOwner']}>
@@ -295,7 +353,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminFarmers />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -307,7 +365,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminShopOwners />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -319,7 +377,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminProducts />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -331,7 +389,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminOrders />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -343,7 +401,43 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminReports />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/my-products"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminOwnProducts />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-product"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminAddProduct />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/earnings"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminOwnEarnings />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>

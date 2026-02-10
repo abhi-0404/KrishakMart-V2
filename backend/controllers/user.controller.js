@@ -7,19 +7,34 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, email, shopName, shopAddress, shopDescription, gstNumber } = req.body;
 
+    console.log('Updating profile for user:', req.user._id);
+    console.log('Update data:', { name, email, shopName, shopAddress, shopDescription, gstNumber });
+
     const user = await User.findById(req.user._id);
 
-    if (name) user.name = name;
-    if (email) user.email = email;
-    
-    if (user.role === 'shopOwner') {
-      if (shopName) user.shopName = shopName;
-      if (shopAddress) user.shopAddress = shopAddress;
-      if (shopDescription) user.shopDescription = shopDescription;
-      if (gstNumber) user.gstNumber = gstNumber;
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
     }
 
+    // Update basic fields
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email || null;
+    
+    // Update shop owner specific fields
+    if (user.role === 'shopOwner') {
+      if (shopName !== undefined) user.shopName = shopName;
+      if (shopAddress !== undefined) user.shopAddress = shopAddress || null;
+      if (shopDescription !== undefined) user.shopDescription = shopDescription || null;
+      if (gstNumber !== undefined) user.gstNumber = gstNumber || null;
+    }
+
+    // Save without triggering password hash
     await user.save();
+
+    console.log('Profile updated successfully');
 
     res.json({
       success: true,
@@ -27,6 +42,7 @@ export const updateProfile = async (req, res) => {
       data: user
     });
   } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({
       success: false,
       message: error.message

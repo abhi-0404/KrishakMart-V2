@@ -15,11 +15,17 @@ interface User {
   email?: string;
   phone?: string;
   shopName?: string;
+  shopAddress?: string;
+  shopDescription?: string;
+  gstNumber?: string;
   addresses?: any[];
+  createdAt?: string;
+  isVerified?: boolean;
 }
 
 interface AppContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   login: (credentials: { phone: string; password: string }) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
@@ -228,6 +234,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider
       value={{
         user,
+        setUser,
         login,
         logout,
         cart,

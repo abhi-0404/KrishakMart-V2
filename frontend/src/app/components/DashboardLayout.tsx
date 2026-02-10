@@ -51,9 +51,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Manage Farmers', path: '/admin/farmers' },
     { icon: Store, label: 'Manage Shop Owners', path: '/admin/shop-owners' },
-    { icon: Package, label: 'Manage Products', path: '/admin/products' },
-    { icon: ShoppingBag, label: 'Manage Orders', path: '/admin/orders' },
-    { icon: BarChart3, label: 'Sales Reports', path: '/admin/reports' },
+    { icon: Package, label: 'All Products', path: '/admin/products' },
+    { icon: ShoppingBag, label: 'All Orders', path: '/admin/orders' },
+    { icon: BarChart3, label: 'Platform Reports', path: '/admin/reports' },
+    { icon: Package, label: 'My Store Products', path: '/admin/my-products' },
+    { icon: PlusCircle, label: 'Add Store Product', path: '/admin/add-product' },
+    { icon: DollarSign, label: 'Admin Earnings', path: '/admin/earnings' },
   ];
 
   const getMenuItems = () => {

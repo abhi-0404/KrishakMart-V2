@@ -5,6 +5,7 @@ import { getSellerProducts, deleteProduct, Product } from '../../../services/pro
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
+import { getFirstImage } from '../../../utils/imageUtils';
 
 export const ShopOwnerProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -83,9 +84,13 @@ export const ShopOwnerProducts: React.FC = () => {
                 {/* Product Image */}
                 <div className="flex-shrink-0">
                   <img
-                    src={product.image}
+                    src={getFirstImage(product.images)}
                     alt={product.name}
                     className="w-32 h-32 object-cover rounded-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-product.svg';
+                    }}
                   />
                 </div>
 
@@ -98,9 +103,11 @@ export const ShopOwnerProducts: React.FC = () => {
                       <p className="text-gray-600">{product.description}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="border-green-600 text-green-600 hover:bg-green-50">
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <Link to={`/shop-owner/edit-product/${product._id}`}>
+                        <Button variant="outline" size="sm" className="border-green-600 text-green-600 hover:bg-green-50">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="outline"
                         size="sm"

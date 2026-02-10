@@ -4,6 +4,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import { getFirstImage } from '../utils/imageUtils';
 
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity } = useApp();
@@ -56,9 +57,13 @@ export const CartPage: React.FC = () => {
                   {/* Product Image */}
                   <div className="flex-shrink-0">
                     <img
-                      src={item.product.image}
+                      src={getFirstImage(item.product.images)}
                       alt={item.product.name}
                       className="w-32 h-32 object-cover rounded-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-product.svg';
+                      }}
                     />
                   </div>
 

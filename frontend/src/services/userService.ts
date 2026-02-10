@@ -24,10 +24,13 @@ export interface UpdateProfileData {
 // Update user profile
 export const updateProfile = async (profileData: UpdateProfileData) => {
   try {
+    console.log('userService: Sending profile update request with data:', profileData);
     const { data } = await API.put('/users/profile', profileData);
+    console.log('userService: Received response:', data);
     return data.data;
-  } catch (error) {
-    console.error('Error updating profile:', error);
+  } catch (error: any) {
+    console.error('userService: Error updating profile:', error);
+    console.error('userService: Error response:', error.response);
     throw error;
   }
 };
