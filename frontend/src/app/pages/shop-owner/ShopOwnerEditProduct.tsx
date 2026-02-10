@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Package, DollarSign, FileText, Image, Save, X, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Package, DollarSign, FileText, Image, Save, X, Upload, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -12,14 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { categories, createProduct } from '../../../services/productService';
+import { categories, getProduct, updateProduct } from '../../../services/productService';
 import { toast } from 'sonner';
+import { getImageUrl } from '../../../utils/imageUtils';
 
-export const ShopOwnerAddProduct: React.FC = () => {
+export const ShopOwnerEditProduct: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
+  const [fetchingProduct, setFetchingProduct] = useState(true);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [product, setProduct] = useState({
     name: '',
     category: '',
@@ -29,6 +33,40 @@ export const ShopOwnerAddProduct: React.FC = () => {
     description: '',
     usage: '',
   });
+
+  useEffect(() => {
+    if (id) {
+      fetchProductData();
+    }
+  }, [id]);
+
+  const fetchProductData = async () => {
+    try {
+      setFetchingProduct(true);
+      const data = await getProduct(id!);
+      
+      setProduct({
+        name: data.name,
+        category: data.category,
+        brand: data.brand,
+        price: data.price.toString(),
+        stock: data.stock.toString(),
+        description: data.description,
+        usage: data.usage || '',
+      });
+      
+      // Set existing images
+      if (data.images && data.images.length > 0) {
+        setExistingImages(data.images);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      toast.error('Failed to load product details');
+      navigate('/shop-owner/products');
+    } finally {
+      setFetchingProduct(false);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -48,7 +86,8 @@ export const ShopOwnerAddProduct: React.FC = () => {
       return true;
     });
 
-    if (selectedImages.length + validFiles.length > 5) {
+    const totalImages = existingImages.length + selectedImages.length + validFiles.length;
+    if (totalImages > 5) {
       toast.error('Maximum 5 images allowed');
       return;
     }
@@ -69,11 +108,16 @@ export const ShopOwnerAddProduct: React.FC = () => {
     });
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImage = (index: number) => {
     const newImages = selectedImages.filter((_, i) => i !== index);
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     setSelectedImages(newImages);
     setImagePreviews(newPreviews);
+  };
+
+  const removeExistingImage = (index: number) => {
+    const newExistingImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(newExistingImages);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,55 +160,64 @@ export const ShopOwnerAddProduct: React.FC = () => {
       formData.append('price', product.price);
       formData.append('stock', product.stock);
       formData.append('description', product.description.trim());
-      formData.append('usage', product.usage.trim()); // Always send usage, even if empty
+      formData.append('usage', product.usage.trim());
 
-      // Add images to FormData
-      selectedImages.forEach((image, index) => {
+      // Add existing images that weren't removed
+      existingImages.forEach((image) => {
+        formData.append('existingImages', image);
+      });
+
+      // Add new images to FormData
+      selectedImages.forEach((image) => {
         formData.append('images', image);
       });
 
-      console.log('Submitting product with data:', {
+      console.log('Updating product with data:', {
         name: product.name.trim(),
         category: product.category,
         brand: product.brand.trim(),
         price: product.price,
         stock: product.stock,
-        description: product.description.trim(),
-        usage: product.usage.trim(),
-        imageCount: selectedImages.length
+        existingImageCount: existingImages.length,
+        newImageCount: selectedImages.length
       });
 
-      await createProduct(formData);
-      toast.success('Product added successfully!');
-      
-      // Reset form
-      setProduct({
-        name: '',
-        category: '',
-        brand: '',
-        price: '',
-        stock: '',
-        description: '',
-        usage: '',
-      });
-      setSelectedImages([]);
-      setImagePreviews([]);
-      
+      await updateProduct(id!, formData);
+      toast.success('Product updated successfully!');
       navigate('/shop-owner/products');
     } catch (error: any) {
-      console.error('Error adding product:', error);
-      const message = error.response?.data?.message || 'Failed to add product';
+      console.error('Error updating product:', error);
+      const message = error.response?.data?.message || 'Failed to update product';
       toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchingProduct) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-xl text-gray-600">Loading product details...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Add New Product</h1>
-        <p className="text-gray-600">List a new farming product for sale</p>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/shop-owner/products')}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Edit Product</h1>
+          <p className="text-gray-600">Update your product details</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 max-w-4xl">
@@ -279,48 +332,75 @@ export const ShopOwnerAddProduct: React.FC = () => {
             />
           </div>
 
-          {/* Upload Images */}
+          {/* Product Images */}
           <div>
             <Label className="text-base flex items-center gap-2">
               <Image className="h-4 w-4" />
               Product Images (Max 5)
             </Label>
             
-            {/* Image Upload Area */}
-            <div className="mt-2">
-              <input
-                type="file"
-                id="images"
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <label
-                htmlFor="images"
-                className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-green-500 transition-colors cursor-pointer"
-              >
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                <p className="text-sm text-gray-500">PNG, JPG up to 5MB each (Max 5 images)</p>
-              </label>
-            </div>
+            {/* Existing Images */}
+            {existingImages.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-3">Current Images ({existingImages.length}):</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {existingImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={getImageUrl(image)}
+                        alt={`Existing ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {/* Image Previews */}
+            {/* Upload New Images */}
+            {(existingImages.length + selectedImages.length) < 5 && (
+              <div className="mt-4">
+                <input
+                  type="file"
+                  id="images"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="images"
+                  className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-green-500 transition-colors cursor-pointer"
+                >
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 mb-2">Click to upload new images</p>
+                  <p className="text-sm text-gray-500">PNG, JPG up to 5MB each</p>
+                </label>
+              </div>
+            )}
+
+            {/* New Image Previews */}
             {imagePreviews.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm text-gray-600 mb-3">Selected Images ({imagePreviews.length}/5):</p>
+                <p className="text-sm text-gray-600 mb-3">New Images ({imagePreviews.length}):</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                        alt={`New ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-green-200"
                       />
                       <button
                         type="button"
-                        onClick={() => removeImage(index)}
+                        onClick={() => removeNewImage(index)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="h-4 w-4" />
@@ -351,7 +431,7 @@ export const ShopOwnerAddProduct: React.FC = () => {
               disabled={loading}
             >
               <Save className="h-5 w-5" />
-              {loading ? 'Saving...' : 'Save Product'}
+              {loading ? 'Updating...' : 'Update Product'}
             </Button>
           </div>
         </div>

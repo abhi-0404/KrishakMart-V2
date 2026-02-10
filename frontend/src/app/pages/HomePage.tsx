@@ -34,13 +34,7 @@ export const HomePage: React.FC = () => {
     <div>
       {/* Hero Section */}
       <section className="relative h-[600px] bg-gradient-to-r from-[#2f7c4f] to-[#236240] overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1762884109987-c0fb0d5838dc?w=1920"
-            alt="Farmer in field"
-            className="w-full h-full object-cover opacity-30"
-          />
-        </div>
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920')] bg-cover bg-center opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl space-y-8">
             <div className="space-y-4">

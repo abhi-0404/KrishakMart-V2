@@ -30,6 +30,7 @@ const FarmerProfile = lazy(() => import('./pages/farmer/FarmerProfile').then(m =
 const ShopOwnerDashboard = lazy(() => import('./pages/shop-owner/ShopOwnerDashboard').then(m => ({ default: m.ShopOwnerDashboard })));
 const ShopOwnerProducts = lazy(() => import('./pages/shop-owner/ShopOwnerProducts').then(m => ({ default: m.ShopOwnerProducts })));
 const ShopOwnerAddProduct = lazy(() => import('./pages/shop-owner/ShopOwnerAddProduct').then(m => ({ default: m.ShopOwnerAddProduct })));
+const ShopOwnerEditProduct = lazy(() => import('./pages/shop-owner/ShopOwnerEditProduct').then(m => ({ default: m.ShopOwnerEditProduct })));
 const ShopOwnerOrders = lazy(() => import('./pages/shop-owner/ShopOwnerOrders').then(m => ({ default: m.ShopOwnerOrders })));
 const ShopOwnerEarnings = lazy(() => import('./pages/shop-owner/ShopOwnerEarnings').then(m => ({ default: m.ShopOwnerEarnings })));
 const ShopOwnerProfile = lazy(() => import('./pages/shop-owner/ShopOwnerProfile').then(m => ({ default: m.ShopOwnerProfile })));
@@ -53,6 +54,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string
   }
 
   return <>{children}</>;
+};
+
+// Profile Redirect Component
+const ProfileRedirect: React.FC = () => {
+  const { user } = useApp();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to role-specific profile page
+  switch (user.role) {
+    case 'farmer':
+      return <Navigate to="/farmer/profile" replace />;
+    case 'shopOwner':
+      return <Navigate to="/shop-owner/profile" replace />;
+    case 'admin':
+      return <Navigate to="/admin/dashboard" replace />;
+    default:
+      return <Navigate to="/" replace />;
+  }
 };
 
 // Loading component
@@ -152,6 +174,21 @@ function AppContent() {
         <Route path="/login" element={<Suspense fallback={<LoadingFallback />}><LoginPage /></Suspense>} />
         <Route path="/signup/:userType" element={<Suspense fallback={<LoadingFallback />}><SignupPage /></Suspense>} />
 
+        {/* Profile Route - accessible to all logged-in users */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['farmer', 'shopOwner', 'admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  {/* We'll use role-specific profile components */}
+                  <ProfileRedirect />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Farmer Routes */}
         <Route
           path="/farmer/dashboard"
@@ -234,6 +271,18 @@ function AppContent() {
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
                   <ShopOwnerAddProduct />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/shop-owner/edit-product/:id"
+          element={
+            <ProtectedRoute allowedRoles={['shopOwner']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ShopOwnerEditProduct />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>

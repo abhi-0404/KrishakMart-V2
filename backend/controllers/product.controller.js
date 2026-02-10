@@ -90,30 +90,66 @@ export const createProduct = async (req, res) => {
   try {
     const { name, category, brand, price, stock, description, usage } = req.body;
 
-    const seller = await User.findById(req.user._id);
-
-    // Handle image uploads
-    let images = [];
-    if (req.files && req.files.length > 0) {
-      images = req.files.map(file => `/uploads/products/${file.filename}`);
-    } else if (req.body.images) {
-      // If images are provided as URLs (for testing)
-      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
-    }
-
-    const product = await Product.create({
+    // Debug: Log the request data
+    console.log('Creating product with data:', {
       name,
       category,
       brand,
       price,
       stock,
       description,
-      usage,
+      usage: usage || 'empty',
+      filesCount: req.files ? req.files.length : 0
+    });
+
+    const seller = await User.findById(req.user._id);
+
+    // Handle image uploads
+    let images = [];
+    
+    if (req.files && req.files.length > 0) {
+      // If using Cloudinary
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        try {
+          const { uploadToCloudinary } = await import('../middleware/upload.middleware.js');
+          
+          // Upload each file to Cloudinary
+          const uploadPromises = req.files.map(file => uploadToCloudinary(file));
+          images = await Promise.all(uploadPromises);
+          
+          console.log('Images uploaded to Cloudinary:', images);
+        } catch (cloudinaryError) {
+          console.error('Cloudinary upload failed, using local storage:', cloudinaryError);
+          // Fallback to local storage
+          images = req.files.map(file => `/uploads/products/${file.filename}`);
+        }
+      } else {
+        // Local storage fallback
+        images = req.files.map(file => `/uploads/products/${file.filename}`);
+        console.log('Images stored locally:', images);
+      }
+    } else if (req.body.images) {
+      // If images are provided as URLs (for testing or external URLs)
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
+
+    const productData = {
+      name,
+      category,
+      brand,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+      description,
+      usage: usage || '',
       images,
       sellerId: req.user._id,
       shopOwner: seller.shopName || seller.name,
-      isAvailable: stock > 0
-    });
+      isAvailable: parseInt(stock) > 0
+    };
+
+    console.log('Creating product with final data:', productData);
+
+    const product = await Product.create(productData);
 
     res.status(201).json({
       success: true,
@@ -121,9 +157,21 @@ export const createProduct = async (req, res) => {
       data: product
     });
   } catch (error) {
+    console.error('Error creating product:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || 'Failed to create product'
     });
   }
 };
@@ -150,20 +198,68 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-    // Handle new image uploads
-    if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/products/${file.filename}`);
-      req.body.images = [...(product.images || []), ...newImages];
+    console.log('Updating product with data:', {
+      name: req.body.name,
+      category: req.body.category,
+      existingImages: req.body.existingImages,
+      newFiles: req.files ? req.files.length : 0
+    });
+
+    // Handle images
+    let images = [];
+    
+    // Keep existing images that weren't removed
+    if (req.body.existingImages) {
+      images = Array.isArray(req.body.existingImages) 
+        ? req.body.existingImages 
+        : [req.body.existingImages];
     }
 
-    // Update availability based on stock
-    if (req.body.stock !== undefined) {
-      req.body.isAvailable = req.body.stock > 0;
+    // Add new uploaded images
+    if (req.files && req.files.length > 0) {
+      // If using Cloudinary
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        try {
+          const { uploadToCloudinary } = await import('../middleware/upload.middleware.js');
+          
+          // Upload each file to Cloudinary
+          const uploadPromises = req.files.map(file => uploadToCloudinary(file));
+          const cloudinaryImages = await Promise.all(uploadPromises);
+          images = [...images, ...cloudinaryImages];
+          
+          console.log('New images uploaded to Cloudinary:', cloudinaryImages);
+        } catch (cloudinaryError) {
+          console.error('Cloudinary upload failed, using local storage:', cloudinaryError);
+          // Fallback to local storage
+          const localImages = req.files.map(file => `/uploads/products/${file.filename}`);
+          images = [...images, ...localImages];
+        }
+      } else {
+        // Local storage fallback
+        const localImages = req.files.map(file => `/uploads/products/${file.filename}`);
+        images = [...images, ...localImages];
+        console.log('New images stored locally:', localImages);
+      }
     }
+
+    // Update product data
+    const updateData = {
+      name: req.body.name,
+      category: req.body.category,
+      brand: req.body.brand,
+      price: parseFloat(req.body.price),
+      stock: parseInt(req.body.stock),
+      description: req.body.description,
+      usage: req.body.usage || '',
+      images,
+      isAvailable: parseInt(req.body.stock) > 0
+    };
+
+    console.log('Final update data:', updateData);
 
     product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -173,9 +269,21 @@ export const updateProduct = async (req, res) => {
       data: product
     });
   } catch (error) {
+    console.error('Error updating product:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || 'Failed to update product'
     });
   }
 };
@@ -223,6 +331,13 @@ export const getSellerProducts = async (req, res) => {
   try {
     const products = await Product.find({ sellerId: req.user._id })
       .sort({ createdAt: -1 });
+
+    // Debug: Log the products to see the images array
+    console.log('Seller products:', products.map(p => ({
+      name: p.name,
+      images: p.images,
+      image: p.image // virtual field
+    })));
 
     res.json({
       success: true,

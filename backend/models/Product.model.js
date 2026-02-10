@@ -33,7 +33,8 @@ const productSchema = new mongoose.Schema({
   },
   usage: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   images: [{
     type: String
@@ -67,5 +68,14 @@ const productSchema = new mongoose.Schema({
 
 // Index for search
 productSchema.index({ name: 'text', description: 'text', brand: 'text' });
+
+// Virtual field for backward compatibility
+productSchema.virtual('image').get(function() {
+  return this.images && this.images.length > 0 ? this.images[0] : null;
+});
+
+// Ensure virtual fields are serialized
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
 
 export default mongoose.model('Product', productSchema);

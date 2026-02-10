@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { useApp } from '../context/AppContext';
 import { toast } from 'sonner';
+import { getFirstImage } from '../../utils/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -30,9 +31,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Product Image */}
         <div className="relative h-56 bg-gray-100 overflow-hidden">
           <img
-            src={product.image}
+            src={getFirstImage(product.images)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder-product.svg';
+            }}
           />
           {product.stock < 20 && (
             <Badge className="absolute top-3 right-3 bg-orange-500">

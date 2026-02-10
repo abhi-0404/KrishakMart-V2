@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useApp } from '../context/AppContext';
 import { toast } from 'sonner';
+import { getFirstImage } from '../../utils/imageUtils';
 
 export const ProductDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -92,9 +93,13 @@ export const ProductDetailsPage: React.FC = () => {
             <div className="space-y-4">
               <div className="relative h-[500px] bg-gray-100 rounded-xl overflow-hidden">
                 <img
-                  src={product.image}
+                  src={getFirstImage(product.images)}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-product.svg';
+                  }}
                 />
                 {product.stock < 20 && (
                   <Badge className="absolute top-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm">
