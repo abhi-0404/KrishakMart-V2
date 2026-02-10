@@ -6,9 +6,15 @@ import User from '../models/User.model.js';
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category, search, minPrice, maxPrice, sort } = req.query;
+    const { category, search, minPrice, maxPrice, sort, sellerId } = req.query;
+    const { sellerId: sellerIdParam } = req.params;
     
     let query = { isAvailable: true };
+
+    // Seller filter (from query param or route param)
+    if (sellerId || sellerIdParam) {
+      query.sellerId = sellerId || sellerIdParam;
+    }
 
     // Category filter
     if (category) {
@@ -28,7 +34,7 @@ export const getProducts = async (req, res) => {
     }
 
     // Build query
-    let productsQuery = Product.find(query).populate('sellerId', 'name shopName');
+    let productsQuery = Product.find(query).populate('sellerId', 'name shopName shopAddress phone');
 
     // Sorting
     if (sort === 'price-asc') {
