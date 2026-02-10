@@ -1,41 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Package, Store, Tag, Eye, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAllProducts } from '../../../services/adminService';
+import { deleteProduct } from '../../../services/productService';
 
 interface AdminProduct {
-  id: string;
+  _id: string;
   name: string;
-  shopName: string;
+  sellerId: {
+    _id: string;
+    name: string;
+    shopName?: string;
+  };
   category: string;
   price: number;
   stock: number;
-  status: 'active' | 'out_of_stock' | 'pending';
-  image: string;
+  images?: string[];
+  image?: string;
 }
 
-const mockProducts: AdminProduct[] = [
-  { id: '1', name: 'Premium NPK Fertilizer', shopName: 'Green Valley Seeds', category: 'Fertilizers', price: 850, stock: 150, status: 'active', image: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?auto=format&fit=crop&q=80&w=200' },
-  { id: '2', name: 'Organic Tomato Seeds', shopName: 'Kisan Mitra Fertilizers', category: 'Seeds', price: 45, stock: 500, status: 'active', image: 'https://images.unsplash.com/photo-1592419044706-39796d40f98c?auto=format&fit=crop&q=80&w=200' },
-  { id: '3', name: 'Heavy Duty Garden Hoe', shopName: 'Agro Tech Tools', category: 'Tools', price: 1200, stock: 25, status: 'active', image: 'https://images.unsplash.com/photo-1590595906931-81f04f0ccebb?auto=format&fit=crop&q=80&w=200' },
-  { id: '4', name: 'Drip Irrigation Kit', shopName: 'Modern Farm Supplies', category: 'Equipment', price: 4500, stock: 0, status: 'out_of_stock', image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&q=80&w=200' },
-  { id: '5', name: 'Bio-Pesticide Spray', shopName: 'Soil Care Bio', category: 'Pesticides', price: 320, stock: 85, status: 'active', image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&q=80&w=200' },
-];
-
 export const AdminProducts: React.FC = () => {
-  const [products, setProducts] = useState<AdminProduct[]>(mockProducts);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.shopName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  const deleteProduct = (id: string) => {
-    if (confirm('Are you sure you want to remove this product from the platform?')) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-      toast.error('Product has been removed');
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllProducts();
+      setProducts(data);
+    } catch (error) {
+      toast.error('Failed to load products');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (p.sellerId.shopName && p.sellerId.shopName.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const deleteProductHandler = async (id: string) => {
+    if (confirm('Are you sure you want to remove this product from the platform?')) {
+      try {
+        await deleteProduct(id);
+        toast.success('Product has been removed');
+        fetchProducts();
+      } catch (error) {
+        toast.error('Failed to delete product');
+        console.error(error);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -62,12 +98,18 @@ export const AdminProducts: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 outline-none font-medium text-gray-700">
-          <option>All Categories</option>
-          <option>Seeds</option>
-          <option>Fertilizers</option>
-          <option>Tools</option>
-          <option>Equipment</option>
+        <select 
+          className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 outline-none font-medium text-gray-700"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          <option value="all">All Categories</option>
+          <option value="seeds">Seeds</option>
+          <option value="fertilizers">Fertilizers</option>
+          <option value="pesticides">Pesticides</option>
+          <option value="tools">Tools</option>
+          <option value="irrigation">Irrigation</option>
+          <option value="feed">Feed</option>
         </select>
       </div>
 
@@ -87,10 +129,14 @@ export const AdminProducts: React.FC = () => {
             </thead>
             <tbody className="divide-y-2 divide-gray-100">
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-green-50/50 transition-colors">
+                <tr key={product._id} className="hover:bg-green-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img src={product.image} alt={product.name} className="h-12 w-12 rounded-lg object-cover border-2 border-gray-100" />
+                      <img 
+                        src={product.images?.[0] || product.image || 'https://via.placeholder.com/50'} 
+                        alt={product.name} 
+                        className="h-12 w-12 rounded-lg object-cover border-2 border-gray-100" 
+                      />
                       <div>
                         <p className="font-bold text-gray-800">{product.name}</p>
                         <p className="text-xs text-gray-500 uppercase font-semibold">{product.category}</p>
@@ -100,7 +146,7 @@ export const AdminProducts: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-gray-700">
                       <Store className="h-4 w-4 text-blue-600" />
-                      <span className="font-medium">{product.shopName}</span>
+                      <span className="font-medium">{product.sellerId.shopName || product.sellerId.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -113,20 +159,22 @@ export const AdminProducts: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                      product.status === 'active' ? 'bg-green-100 text-green-700' : 
-                      product.status === 'out_of_stock' ? 'bg-red-100 text-red-700' : 
-                      'bg-blue-100 text-blue-700'
+                      product.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
-                      {product.status.replace('_', ' ')}
+                      {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
-                      <button className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Product">
+                      <button 
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" 
+                        title="View Product"
+                        onClick={() => toast.info('View details coming soon')}
+                      >
                         <Eye className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => deleteProduct(product.id)}
+                        onClick={() => deleteProductHandler(product._id)}
                         className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                         title="Delete Listing"
                       >
@@ -139,6 +187,12 @@ export const AdminProducts: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {filteredProducts.length === 0 && (
+          <div className="p-12 text-center text-gray-500">
+            <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
+            <p className="text-lg">No products found matching your criteria.</p>
+          </div>
+        )}
       </div>
     </div>
   );

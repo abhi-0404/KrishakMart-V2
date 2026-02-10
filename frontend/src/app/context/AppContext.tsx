@@ -48,20 +48,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
+    const persistSession = localStorage.getItem('persistSession');
     
     if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
-        // Fetch cart and wishlist if farmer
         const parsedUser = JSON.parse(savedUser);
-        if (parsedUser.role === 'farmer') {
-          fetchCart();
-          fetchWishlist();
+        
+        // Only auto-login if persistSession is true (admin only)
+        if (persistSession === 'true') {
+          setUser(parsedUser);
+          // Fetch cart and wishlist if farmer
+          if (parsedUser.role === 'farmer') {
+            fetchCart();
+            fetchWishlist();
+          }
+        } else {
+          // Clear localStorage for non-persistent sessions
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('persistSession');
         }
       } catch (error) {
         console.error('Error loading user:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('persistSession');
       }
     }
   }, []);
@@ -76,6 +87,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Mark session type - only admin gets persistent session
+      if (userData.role === 'admin') {
+        localStorage.setItem('persistSession', 'true');
+      } else {
+        localStorage.setItem('persistSession', 'false');
+      }
+      
       setUser(userData);
       
       // Fetch cart and wishlist if farmer
@@ -97,6 +116,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('persistSession');
     setUser(null);
     setCart([]);
     setWishlist([]);

@@ -1,34 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, User, Calendar, Truck, CheckCircle, Clock, XCircle, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAllOrders } from '../../../services/adminService';
 
 interface AdminOrder {
-  id: string;
-  customerName: string;
-  shopName: string;
-  date: string;
-  amount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  items: number;
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+  };
+  items: Array<{
+    productId: {
+      _id: string;
+      name: string;
+      sellerId: {
+        _id: string;
+        name: string;
+        shopName?: string;
+      };
+    };
+    quantity: number;
+    price: number;
+  }>;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
 }
 
-const mockOrders: AdminOrder[] = [
-  { id: 'ORD-2345', customerName: 'Ramesh Kumar', shopName: 'Green Valley Seeds', date: '2024-02-08', amount: 1250, status: 'delivered', items: 3 },
-  { id: 'ORD-2346', customerName: 'Suresh Singh', shopName: 'Kisan Mitra Fertilizers', date: '2024-02-09', amount: 3400, status: 'processing', items: 5 },
-  { id: 'ORD-2347', customerName: 'Amit Patel', shopName: 'Modern Farm Supplies', date: '2024-02-09', amount: 850, status: 'pending', items: 1 },
-  { id: 'ORD-2348', customerName: 'Vijay Patil', shopName: 'Agro Tech Tools', date: '2024-02-07', amount: 5600, status: 'shipped', items: 2 },
-  { id: 'ORD-2349', customerName: 'Ramesh Kumar', shopName: 'Soil Care Bio', date: '2024-02-06', amount: 120, status: 'cancelled', items: 1 },
-];
-
 export const AdminOrders: React.FC = () => {
-  const [orders, setOrders] = useState<AdminOrder[]>(mockOrders);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
-  const filteredOrders = orders.filter(o => 
-    o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    o.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.shopName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllOrders();
+      setOrders(data);
+    } catch (error) {
+      toast.error('Failed to load orders');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredOrders = orders.filter(o => {
+    const matchesSearch = 
+      o._id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      o.userId.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || o.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,6 +80,17 @@ export const AdminOrders: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -60,8 +99,8 @@ export const AdminOrders: React.FC = () => {
           <p className="text-gray-600">Track and monitor all transactions across the platform</p>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg border-2 border-orange-200 shadow-sm flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-600">Active Orders:</span>
-          <span className="text-lg font-bold text-orange-700">{orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length}</span>
+          <span className="text-sm font-medium text-gray-600">Total Orders:</span>
+          <span className="text-lg font-bold text-orange-700">{orders.length}</span>
         </div>
       </div>
 
@@ -71,19 +110,23 @@ export const AdminOrders: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by Order ID, Customer or Shop..."
+            placeholder="Search by Order ID or Customer..."
             className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 outline-none font-medium text-gray-700">
-          <option>All Status</option>
-          <option>Pending</option>
-          <option>Processing</option>
-          <option>Shipped</option>
-          <option>Delivered</option>
-          <option>Cancelled</option>
+        <select 
+          className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-500 outline-none font-medium text-gray-700"
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -94,8 +137,8 @@ export const AdminOrders: React.FC = () => {
             <thead className="bg-green-50 border-b-2 border-green-100">
               <tr>
                 <th className="px-6 py-4 font-bold text-green-800">Order ID</th>
-                <th className="px-6 py-4 font-bold text-green-800">Farmer</th>
-                <th className="px-6 py-4 font-bold text-green-800">Shop</th>
+                <th className="px-6 py-4 font-bold text-green-800">Customer</th>
+                <th className="px-6 py-4 font-bold text-green-800">Items</th>
                 <th className="px-6 py-4 font-bold text-green-800">Date</th>
                 <th className="px-6 py-4 font-bold text-green-800">Amount</th>
                 <th className="px-6 py-4 font-bold text-green-800">Status</th>
@@ -104,28 +147,27 @@ export const AdminOrders: React.FC = () => {
             </thead>
             <tbody className="divide-y-2 divide-gray-100">
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-green-50/50 transition-colors">
+                <tr key={order._id} className="hover:bg-green-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="font-bold text-gray-800">{order.id}</span>
-                    <p className="text-xs text-gray-500">{order.items} items</p>
+                    <span className="font-bold text-gray-800">{order._id.slice(-8).toUpperCase()}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium text-gray-700">{order.customerName}</span>
+                      <span className="font-medium text-gray-700">{order.userId.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-gray-700">{order.shopName}</span>
+                    <span className="text-gray-700">{order.items.length} items</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 text-gray-600">
                       <Calendar className="h-4 w-4" />
-                      {order.date}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-bold text-green-700">₹{order.amount.toLocaleString()}</span>
+                    <span className="font-bold text-green-700">₹{order.totalAmount.toLocaleString()}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase w-fit ${getStatusColor(order.status)}`}>
@@ -135,7 +177,10 @@ export const AdminOrders: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center">
-                      <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => toast.info('Order details coming soon')}
+                      >
                         <MoreVertical className="h-5 w-5" />
                       </button>
                     </div>
@@ -145,6 +190,12 @@ export const AdminOrders: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {filteredOrders.length === 0 && (
+          <div className="p-12 text-center text-gray-500">
+            <ShoppingBag className="h-12 w-12 mx-auto mb-4 opacity-20" />
+            <p className="text-lg">No orders found matching your criteria.</p>
+          </div>
+        )}
       </div>
     </div>
   );
