@@ -127,12 +127,22 @@ export const ProductDetailsPage: React.FC = () => {
               </div>
 
               {/* Shop Owner */}
-              <div className="flex items-center gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
-                <Store className="h-6 w-6 text-green-600" />
-                <div>
-                  <div className="text-sm text-gray-600">Sold by</div>
-                  <div className="font-semibold text-gray-800">{shopName}</div>
+              <div className="flex items-center justify-between gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-3">
+                  <Store className="h-6 w-6 text-green-600" />
+                  <div>
+                    <div className="text-sm text-gray-600">Sold by</div>
+                    <div className="font-semibold text-gray-800">{shopName}</div>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/shop/${typeof product.sellerId === 'object' ? product.sellerId._id : product.sellerId}`)}
+                  className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                >
+                  Visit Shop
+                </Button>
               </div>
 
               {/* Price */}

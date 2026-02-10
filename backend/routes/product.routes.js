@@ -15,6 +15,7 @@ const router = express.Router();
 
 router.get('/', getProducts);
 router.get('/seller/my-products', protect, authorize('shopOwner', 'admin'), getSellerProducts);
+router.get('/seller/:sellerId/products', getProducts); // Public route to view any seller's products
 router.get('/:id', getProduct);
 router.post('/', protect, authorize('shopOwner', 'admin'), upload.array('images', 5), createProduct);
 router.put('/:id', protect, authorize('shopOwner', 'admin'), upload.array('images', 5), updateProduct);

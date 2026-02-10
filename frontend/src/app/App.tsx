@@ -12,6 +12,7 @@ import { DashboardLayout } from './components/DashboardLayout';
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
 const ProductListingPage = lazy(() => import('./pages/ProductListingPage').then(m => ({ default: m.ProductListingPage })));
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage').then(m => ({ default: m.ProductDetailsPage })));
+const ShopPage = lazy(() => import('./pages/ShopPage').then(m => ({ default: m.ShopPage })));
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -137,6 +138,14 @@ function AppContent() {
           element={
             <PublicLayout>
               <ProductDetailsPage />
+            </PublicLayout>
+          }
+        />
+        <Route
+          path="/shop/:sellerId"
+          element={
+            <PublicLayout>
+              <ShopPage />
             </PublicLayout>
           }
         />

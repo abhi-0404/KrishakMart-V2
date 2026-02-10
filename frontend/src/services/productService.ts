@@ -27,6 +27,7 @@ export interface ProductFilters {
   maxPrice?: number;
   search?: string;
   inStock?: boolean;
+  sellerId?: string;
 }
 
 // Get all products with optional filters
@@ -38,11 +39,29 @@ export const getProducts = async (filters?: ProductFilters) => {
     if (filters?.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
     if (filters?.search) params.append('search', filters.search);
     if (filters?.inStock !== undefined) params.append('inStock', filters.inStock.toString());
+    if (filters?.sellerId) params.append('sellerId', filters.sellerId);
 
     const { data } = await API.get(`/products?${params.toString()}`);
     return data.data;
   } catch (error) {
     console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+// Get products by specific seller (public)
+export const getProductsBySeller = async (sellerId: string, filters?: Omit<ProductFilters, 'sellerId'>) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.minPrice) params.append('minPrice', filters.minPrice.toString());
+    if (filters?.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+    if (filters?.search) params.append('search', filters.search);
+
+    const { data } = await API.get(`/products/seller/${sellerId}/products?${params.toString()}`);
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching seller products:', error);
     throw error;
   }
 };

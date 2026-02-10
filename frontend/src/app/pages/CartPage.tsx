@@ -4,7 +4,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
-import { getFirstImage } from '../utils/imageUtils';
+import { getFirstImage } from '../../utils/imageUtils';
 
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity } = useApp();
