@@ -107,12 +107,21 @@ export const FarmerOrders: React.FC = () => {
               </div>
 
               {/* Order Footer */}
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                <div>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center pt-4 border-t border-gray-200 gap-4">
+                <div className="flex-1">
                   <p className="text-sm text-gray-600">Delivery Address</p>
-                  <p className="font-medium text-gray-800">{order.deliveryAddress}</p>
+                  <p className="font-medium text-gray-800">
+                    {typeof order.deliveryAddress === 'string' 
+                      ? order.deliveryAddress 
+                      : order.deliveryAddress?.fullAddress || 'N/A'}
+                  </p>
+                  {order.deliveryAddress?.phone && (
+                    <p className="text-sm text-gray-600 mt-1">Phone: {order.deliveryAddress.phone}</p>
+                  )}
                 </div>
                 <div className="text-right">
+                  <p className="text-sm text-gray-600">Payment Method</p>
+                  <p className="font-medium text-gray-800 mb-2">{order.paymentMethod}</p>
                   <p className="text-sm text-gray-600">Total Amount</p>
                   <p className="text-2xl font-bold text-green-700">₹{order.totalAmount}</p>
                 </div>
