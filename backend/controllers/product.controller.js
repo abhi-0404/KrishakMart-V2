@@ -216,6 +216,54 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
+// @desc    Update product stock
+// @route   PATCH /api/products/:id/stock
+// @access  Private (Shop Owner)
+export const updateStock = async (req, res) => {
+  try {
+    const { stock } = req.body;
+
+    if (stock === undefined || stock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid stock quantity is required'
+      });
+    }
+
+    let product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Check ownership
+    if (product.sellerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this product'
+      });
+    }
+
+    product.stock = stock;
+    product.isAvailable = stock > 0;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Get seller's products
 // @route   GET /api/products/seller/my-products
 // @access  Private (Shop Owner)
