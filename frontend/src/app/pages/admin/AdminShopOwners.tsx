@@ -85,13 +85,13 @@ export const AdminShopOwners: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Shop Owners</h1>
           <p className="text-gray-600">Review shop applications and manage existing sellers</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2">
+        <div className="flex gap-4 w-full sm:w-auto">
+          <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium text-gray-600">Total Shops:</span>
             <span className="text-lg font-bold text-green-700">{shopOwners.length}</span>
           </div>

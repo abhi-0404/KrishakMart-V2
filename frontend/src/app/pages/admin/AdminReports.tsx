@@ -85,21 +85,21 @@ export const AdminReports: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Sales & Analytics Reports</h1>
           <p className="text-gray-600">Deep dive into platform performance and growth metrics</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button 
             onClick={fetchStats}
-            className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-green-200 text-green-700 font-bold hover:bg-green-50 transition-colors"
+            className="flex items-center justify-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-green-200 text-green-700 font-bold hover:bg-green-50 transition-colors w-full sm:w-auto"
           >
             <Filter className="h-5 w-5" /> Refresh
           </button>
           <button 
             onClick={() => toast.info('Export feature coming soon')}
-            className="flex items-center gap-2 bg-green-600 px-4 py-2 rounded-lg text-white font-bold hover:bg-green-700 shadow-md transition-colors"
+            className="flex items-center justify-center gap-2 bg-green-600 px-4 py-2 rounded-lg text-white font-bold hover:bg-green-700 shadow-md transition-colors w-full sm:w-auto"
           >
             <Download className="h-5 w-5" /> Export PDF
           </button>

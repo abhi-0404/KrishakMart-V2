@@ -88,7 +88,7 @@ export const AdminOwnProducts: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">My Official Products</h1>
           <p className="text-gray-600">Products sold directly by the platform</p>
@@ -96,7 +96,7 @@ export const AdminOwnProducts: React.FC = () => {
         <Button
           onClick={handleAddProduct}
           size="lg"
-          className="bg-green-700 hover:bg-green-800 gap-2 shadow-md"
+          className="bg-green-700 hover:bg-green-800 gap-2 shadow-md w-full sm:w-auto"
         >
           <Plus className="h-5 w-5" />
           Add Official Product
@@ -163,7 +163,7 @@ export const AdminOwnProducts: React.FC = () => {
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
                     <div>
                       <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50 mb-1">Official Listing</Badge>
                       <h3 className="text-2xl font-bold text-gray-800">{product.name}</h3>

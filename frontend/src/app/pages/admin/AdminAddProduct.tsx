@@ -87,7 +87,7 @@ export const AdminAddProduct: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 shadow-md border-2 border-green-600 max-w-3xl">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 sm:p-6 md:p-8 shadow-md border-2 border-green-600 max-w-3xl">
         <div className="space-y-6">
           <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
             <p className="text-sm text-green-800 font-medium">
@@ -112,7 +112,7 @@ export const AdminAddProduct: React.FC = () => {
           </div>
 
           {/* Category and Brand */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category" className="text-base">Category *</Label>
               <Select value={product.category} onValueChange={(value) => setProduct({ ...product, category: value })}>
@@ -143,7 +143,7 @@ export const AdminAddProduct: React.FC = () => {
           </div>
 
           {/* Price and Stock */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price" className="text-base flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />

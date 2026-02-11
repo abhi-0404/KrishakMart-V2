@@ -196,7 +196,7 @@ export const AdminOwnEarnings: React.FC = () => {
 
       {/* Recent Store Transactions */}
       <div className="bg-white rounded-xl shadow-md border-2 border-green-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+        <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h3 className="font-bold text-gray-800">Recent Admin Store Sales</h3>
           <button 
             onClick={() => window.location.href = '/admin/orders'}
@@ -208,7 +208,7 @@ export const AdminOwnEarnings: React.FC = () => {
         {recentOrders.length > 0 ? (
           <div className="divide-y divide-gray-100">
             {recentOrders.map((tx) => (
-              <div key={tx.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+              <div key={tx.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:bg-gray-50 transition-colors">
                 <div>
                   <p className="font-bold text-gray-800">{tx.product}</p>
                   <p className="text-xs text-gray-500">{tx.date} • ID: {tx.id.slice(-8).toUpperCase()}</p>
