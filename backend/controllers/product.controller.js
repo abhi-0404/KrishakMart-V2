@@ -9,7 +9,13 @@ export const getProducts = async (req, res) => {
     const { category, search, minPrice, maxPrice, sort, sellerId } = req.query;
     const { sellerId: sellerIdParam } = req.params;
     
-    let query = { isAvailable: true };
+    let query = {};
+    
+    // Only show available products to non-admin users
+    // Admins can see all products
+    if (!req.user || req.user.role !== 'admin') {
+      query.isAvailable = true;
+    }
 
     // Seller filter (from query param or route param)
     if (sellerId || sellerIdParam) {
@@ -368,6 +374,53 @@ export const updateStock = async (req, res) => {
     res.json({
       success: true,
       message: 'Stock updated successfully',
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Toggle product visibility
+// @route   PATCH /api/products/:id/visibility
+// @access  Private (Shop Owner/Admin)
+export const toggleProductVisibility = async (req, res) => {
+  try {
+    const { isAvailable } = req.body;
+
+    if (isAvailable === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'isAvailable field is required'
+      });
+    }
+
+    let product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Check ownership
+    if (product.sellerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this product'
+      });
+    }
+
+    product.isAvailable = isAvailable;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: `Product ${isAvailable ? 'is now visible' : 'is now hidden'} to users`,
       data: product
     });
   } catch (error) {

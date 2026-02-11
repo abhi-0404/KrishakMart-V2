@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Mail, Phone, MapPin, Calendar, MoreVertical, Trash2, Ban, CheckCircle, Users } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, Calendar, Trash2, Ban, CheckCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
+import API from '../../../services/api';
 
 interface Farmer {
   _id: string;
@@ -56,8 +57,18 @@ export const AdminFarmers: React.FC = () => {
 
   const deleteFarmer = async (id: string) => {
     const farmer = farmers.find(f => f._id === id);
-    if (confirm(`Are you sure you want to delete farmer ${farmer?.name}?`)) {
-      toast.info('Delete functionality will be implemented soon');
+    
+    if (!confirm(`Are you sure you want to delete farmer "${farmer?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await API.delete(`/admin/users/${id}`);
+      toast.success('Farmer deleted successfully');
+      fetchFarmers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete farmer');
+      console.error(error);
     }
   };
 
@@ -74,20 +85,20 @@ export const AdminFarmers: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Farmers</h1>
           <p className="text-gray-600">View and manage registered farmers on the platform</p>
         </div>
-        <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2">
+        <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2 w-full sm:w-auto">
           <span className="text-sm font-medium text-gray-600">Total Farmers:</span>
           <span className="text-lg font-bold text-green-700">{farmers.length}</span>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-xl shadow-md border-2 border-green-100 flex gap-4">
-        <div className="relative flex-1">
+      <div className="bg-white p-4 rounded-xl shadow-md border-2 border-green-100 flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"

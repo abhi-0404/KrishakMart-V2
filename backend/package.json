@@ -10,7 +10,8 @@
     "seed": "node scripts/seed.js",
     "test": "node scripts/testEndpoints.js",
     "setup": "node scripts/createDirectories.js",
-    "clear-users": "node scripts/clearTestUsers.js"
+    "clear-users": "node scripts/clearTestUsers.js",
+    "clear-products": "node scripts/clearProducts.js"
   },
   "keywords": [
     "agriculture",

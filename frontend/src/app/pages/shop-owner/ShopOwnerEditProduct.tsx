@@ -16,7 +16,11 @@ import { categories, getProduct, updateProduct } from '../../../services/product
 import { toast } from 'sonner';
 import { getImageUrl } from '../../../utils/imageUtils';
 
-export const ShopOwnerEditProduct: React.FC = () => {
+interface EditProductProps {
+  returnPath?: string;
+}
+
+export const ShopOwnerEditProduct: React.FC<EditProductProps> = ({ returnPath = '/shop-owner/products' }) => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
@@ -62,7 +66,7 @@ export const ShopOwnerEditProduct: React.FC = () => {
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Failed to load product details');
-      navigate('/shop-owner/products');
+      navigate(returnPath);
     } finally {
       setFetchingProduct(false);
     }
@@ -184,7 +188,7 @@ export const ShopOwnerEditProduct: React.FC = () => {
 
       await updateProduct(id!, formData);
       toast.success('Product updated successfully!');
-      navigate('/shop-owner/products');
+      navigate(returnPath);
     } catch (error: any) {
       console.error('Error updating product:', error);
       const message = error.response?.data?.message || 'Failed to update product';
@@ -208,7 +212,7 @@ export const ShopOwnerEditProduct: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/shop-owner/products')}
+          onClick={() => navigate(returnPath)}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Store, Mail, Phone, MapPin, CheckCircle, XCircle, Info, MoreVertical, Ban } from 'lucide-react';
+import { Search, Store, Mail, MapPin, CheckCircle, Ban, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
+import API from '../../../services/api';
 
 interface ShopOwner {
   _id: string;
@@ -54,6 +55,23 @@ export const AdminShopOwners: React.FC = () => {
     }
   };
 
+  const deleteShopOwner = async (id: string) => {
+    const shop = shopOwners.find(s => s._id === id);
+    
+    if (!confirm(`Are you sure you want to delete "${shop?.shopName || shop?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await API.delete(`/admin/users/${id}`);
+      toast.success('Shop owner deleted successfully');
+      fetchShopOwners();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete shop owner');
+      console.error(error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -67,13 +85,13 @@ export const AdminShopOwners: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Shop Owners</h1>
           <p className="text-gray-600">Review shop applications and manage existing sellers</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2">
+        <div className="flex gap-4 w-full sm:w-auto">
+          <div className="bg-white px-4 py-2 rounded-lg border-2 border-green-200 shadow-sm flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium text-gray-600">Total Shops:</span>
             <span className="text-lg font-bold text-green-700">{shopOwners.length}</span>
           </div>
@@ -157,8 +175,12 @@ export const AdminShopOwners: React.FC = () => {
                       >
                         {!owner.isBlocked ? <Ban className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
                       </button>
-                      <button className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
-                        <Info className="h-5 w-5" />
+                      <button 
+                        onClick={() => deleteShopOwner(owner._id)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                        title="Delete Shop Owner"
+                      >
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   </td>
