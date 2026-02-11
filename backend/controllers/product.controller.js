@@ -6,9 +6,15 @@ import User from '../models/User.model.js';
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category, search, minPrice, maxPrice, sort } = req.query;
+    const { category, search, minPrice, maxPrice, sort, sellerId } = req.query;
+    const { sellerId: sellerIdParam } = req.params;
     
     let query = { isAvailable: true };
+
+    // Seller filter (from query param or route param)
+    if (sellerId || sellerIdParam) {
+      query.sellerId = sellerId || sellerIdParam;
+    }
 
     // Category filter
     if (category) {
@@ -28,7 +34,7 @@ export const getProducts = async (req, res) => {
     }
 
     // Build query
-    let productsQuery = Product.find(query).populate('sellerId', 'name shopName');
+    let productsQuery = Product.find(query).populate('sellerId', 'name shopName shopAddress phone');
 
     // Sorting
     if (sort === 'price-asc') {
@@ -315,6 +321,54 @@ export const deleteProduct = async (req, res) => {
     res.json({
       success: true,
       message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Update product stock
+// @route   PATCH /api/products/:id/stock
+// @access  Private (Shop Owner)
+export const updateStock = async (req, res) => {
+  try {
+    const { stock } = req.body;
+
+    if (stock === undefined || stock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid stock quantity is required'
+      });
+    }
+
+    let product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Check ownership
+    if (product.sellerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this product'
+      });
+    }
+
+    product.stock = stock;
+    product.isAvailable = stock > 0;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      data: product
     });
   } catch (error) {
     res.status(500).json({

@@ -53,13 +53,17 @@ export const LoginPage: React.FC = () => {
   const handleAdminLogin = async () => {
     setLoading(true);
     try {
+      console.log('Attempting admin login...');
       await login({
-        phone: '9876543212',
+        phone: '9999999999',
         password: 'admin123'
       });
+      console.log('Login successful, navigating to admin dashboard...');
       navigate('/admin/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (error: any) {
+      console.error('Admin login failed:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Admin login failed');
     } finally {
       setLoading(false);
     }

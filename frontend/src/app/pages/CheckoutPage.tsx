@@ -7,14 +7,16 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { toast } from 'sonner';
+import { createOrder } from '../../services/orderService';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, clearCart, user } = useApp();
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'UPI' | 'QR'>('COD');
+  const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({
     name: user?.name || '',
-    mobile: '',
+    mobile: user?.phone || '',
     village: '',
     district: '',
     state: '',
@@ -23,7 +25,7 @@ export const CheckoutPage: React.FC = () => {
 
   const totalAmount = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!address.name || !address.mobile || !address.village) {
@@ -31,10 +33,50 @@ export const CheckoutPage: React.FC = () => {
       return;
     }
 
-    // Simulate order placement
-    toast.success('Order placed successfully!');
-    clearCart();
-    navigate('/farmer/orders');
+    if (!user) {
+      toast.error('Please login to place order');
+      navigate('/login');
+      return;
+    }
+
+    if (cart.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare order data
+      const orderData = {
+        products: cart.map(item => ({
+          productId: item.product._id || item.product.id,
+          quantity: item.quantity
+        })),
+        deliveryAddress: {
+          fullAddress: `${address.name}, ${address.village}${address.district ? ', ' + address.district : ''}${address.state ? ', ' + address.state : ''}${address.pincode ? ' - ' + address.pincode : ''}`,
+          village: address.village,
+          district: address.district,
+          state: address.state,
+          pincode: address.pincode,
+          phone: address.mobile
+        },
+        paymentMethod
+      };
+
+      // Create order via API
+      await createOrder(orderData);
+      
+      toast.success('Order placed successfully!');
+      clearCart();
+      navigate('/farmer/orders');
+    } catch (error: any) {
+      console.error('Order placement error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to place order. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -125,7 +167,7 @@ export const CheckoutPage: React.FC = () => {
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 hover:border-green-500 cursor-pointer">
-                      <RadioGroupItem value="cod" id="cod" />
+                      <RadioGroupItem value="COD" id="cod" />
                       <Label htmlFor="cod" className="flex items-center gap-3 cursor-pointer flex-1">
                         <CreditCard className="h-6 w-6 text-green-600" />
                         <div>
@@ -136,7 +178,7 @@ export const CheckoutPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 hover:border-green-500 cursor-pointer">
-                      <RadioGroupItem value="upi" id="upi" />
+                      <RadioGroupItem value="UPI" id="upi" />
                       <Label htmlFor="upi" className="flex items-center gap-3 cursor-pointer flex-1">
                         <Smartphone className="h-6 w-6 text-green-600" />
                         <div>
@@ -147,7 +189,7 @@ export const CheckoutPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 hover:border-green-500 cursor-pointer">
-                      <RadioGroupItem value="qr" id="qr" />
+                      <RadioGroupItem value="QR" id="qr" />
                       <Label htmlFor="qr" className="flex items-center gap-3 cursor-pointer flex-1">
                         <QrCode className="h-6 w-6 text-green-600" />
                         <div>
@@ -195,10 +237,20 @@ export const CheckoutPage: React.FC = () => {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 gap-3"
+                  disabled={loading || cart.length === 0}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle className="h-5 w-5" />
-                  Place Order
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-5 w-5" />
+                      Place Order
+                    </>
+                  )}
                 </Button>
 
                 <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">

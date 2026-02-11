@@ -12,6 +12,7 @@ import { DashboardLayout } from './components/DashboardLayout';
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
 const ProductListingPage = lazy(() => import('./pages/ProductListingPage').then(m => ({ default: m.ProductListingPage })));
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage').then(m => ({ default: m.ProductDetailsPage })));
+const ShopPage = lazy(() => import('./pages/ShopPage').then(m => ({ default: m.ShopPage })));
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -37,6 +38,15 @@ const ShopOwnerProfile = lazy(() => import('./pages/shop-owner/ShopOwnerProfile'
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminFarmers = lazy(() => import('./pages/admin/AdminFarmers').then(m => ({ default: m.AdminFarmers })));
+const AdminShopOwners = lazy(() => import('./pages/admin/AdminShopOwners').then(m => ({ default: m.AdminShopOwners })));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })));
+const AdminOwnProducts = lazy(() => import('./pages/admin/AdminOwnProducts').then(m => ({ default: m.AdminOwnProducts })));
+const AdminAddProduct = lazy(() => import('./pages/admin/AdminAddProduct').then(m => ({ default: m.AdminAddProduct })));
+const AdminOwnEarnings = lazy(() => import('./pages/admin/AdminOwnEarnings').then(m => ({ default: m.AdminOwnEarnings })));
+
 
 // Protected Route Component with Shop Owner restrictions
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[]; blockShopOwner?: boolean }> = ({
@@ -134,6 +144,14 @@ function AppContent() {
           element={
             <PublicLayout>
               <ProductDetailsPage />
+            </PublicLayout>
+          }
+        />
+        <Route
+          path="/shop/:sellerId"
+          element={
+            <PublicLayout>
+              <ShopPage />
             </PublicLayout>
           }
         />
@@ -354,7 +372,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminFarmers />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -366,7 +384,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminShopOwners />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -378,7 +396,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminProducts />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -390,7 +408,7 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminOrders />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
@@ -402,7 +420,43 @@ function AppContent() {
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
-                  <AdminDashboard />
+                  <AdminReports />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/my-products"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminOwnProducts />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-product"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminAddProduct />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/earnings"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminOwnEarnings />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>

@@ -85,10 +85,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </h3>
 
           {/* Shop Owner */}
+<<<<<<< HEAD
           <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
             <Store className="h-3 w-3 md:h-4 md:w-4" />
+=======
+          <Link 
+            to={`/shop/${typeof product.sellerId === 'object' ? product.sellerId._id : product.sellerId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors"
+          >
+            <Store className="h-4 w-4" />
+>>>>>>> 9cdea91589647563e5cdcfaf3420fc4ddc0065f9
             <span className="truncate">{shopName}</span>
-          </div>
+          </Link>
 
           {/* Rating */}
           <div className="flex items-center gap-2">
