@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Package, Star, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit, Trash2, Package, Star, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { getSellerProducts, deleteProduct, Product } from '../../../services/productService';
+import { getFirstImage, getImageUrl } from '../../../utils/imageUtils';
+import { useApp } from '../../context/AppContext';
+import API from '../../../services/api';
+
+type AdminProduct = Product & { isAvailable?: boolean };
 
 export const AdminOwnProducts: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useApp();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -39,6 +47,34 @@ export const AdminOwnProducts: React.FC = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    if (!user || user.role !== 'admin') {
+      navigate('/login');
+      return;
+    }
+    navigate('/admin/add-product');
+  };
+
+  const handleEditProduct = (productId: string) => {
+    if (!user || user.role !== 'admin') {
+      navigate('/login');
+      return;
+    }
+    navigate(`/admin/edit-product/${productId}`);
+  };
+
+  const toggleProductVisibility = async (productId: string, currentStatus: boolean | undefined) => {
+    try {
+      const nextStatus = !currentStatus;
+      await API.patch(`/products/${productId}/visibility`, { isAvailable: nextStatus });
+      toast.success(nextStatus ? 'Product is now visible to users' : 'Product is now hidden from users');
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update product visibility');
+      console.error(error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -58,7 +94,7 @@ export const AdminOwnProducts: React.FC = () => {
           <p className="text-gray-600">Products sold directly by the platform</p>
         </div>
         <Button
-          onClick={() => window.location.href = '/admin/add-product'}
+          onClick={handleAddProduct}
           size="lg"
           className="bg-green-700 hover:bg-green-800 gap-2 shadow-md"
         >
@@ -102,7 +138,7 @@ export const AdminOwnProducts: React.FC = () => {
           <h3 className="text-xl font-bold text-gray-800 mb-2">No Products Yet</h3>
           <p className="text-gray-600 mb-6">Start adding official products to your store</p>
           <Button
-            onClick={() => window.location.href = '/admin/add-product'}
+            onClick={handleAddProduct}
             className="bg-green-700 hover:bg-green-800"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -116,9 +152,13 @@ export const AdminOwnProducts: React.FC = () => {
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="w-full md:w-40 h-40 flex-shrink-0">
                   <img
-                    src={product.images?.[0] || product.image || 'https://via.placeholder.com/200'}
+                    src={product.images?.length ? getFirstImage(product.images) : getImageUrl(product.image)}
                     alt={product.name}
                     className="w-full h-full object-cover rounded-lg border-2 border-gray-100"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-product.svg';
+                    }}
                   />
                 </div>
 
@@ -133,7 +173,16 @@ export const AdminOwnProducts: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toast.info('Edit functionality coming soon')}
+                        onClick={() => toggleProductVisibility(product._id, product.isAvailable)}
+                        className={product.isAvailable ? 'text-green-600 hover:bg-green-50' : 'text-gray-600 hover:bg-gray-100'}
+                        title={product.isAvailable ? 'Hide from users' : 'Show to users'}
+                      >
+                        {product.isAvailable ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditProduct(product._id)}
                         className="text-blue-600 hover:bg-blue-50"
                       >
                         <Edit className="h-4 w-4" />

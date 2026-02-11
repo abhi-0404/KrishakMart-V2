@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Store, Tag, Eye, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Package, Store, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllProducts } from '../../../services/adminService';
 import { deleteProduct } from '../../../services/productService';
+import API from '../../../services/api';
+import { getFirstImage, getImageUrl } from '../../../utils/imageUtils';
 
 interface AdminProduct {
   _id: string;
@@ -17,6 +19,7 @@ interface AdminProduct {
   stock: number;
   images?: string[];
   image?: string;
+  isAvailable: boolean;
 }
 
 export const AdminProducts: React.FC = () => {
@@ -59,6 +62,25 @@ export const AdminProducts: React.FC = () => {
         toast.error('Failed to delete product');
         console.error(error);
       }
+    }
+  };
+
+  const toggleProductVisibility = async (id: string, currentStatus: boolean) => {
+    try {
+      await API.patch(`/products/${id}/visibility`, {
+        isAvailable: !currentStatus
+      });
+      
+      toast.success(
+        !currentStatus 
+          ? 'Product is now visible to users' 
+          : 'Product is now hidden from users'
+      );
+      
+      fetchProducts();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update product visibility');
+      console.error(error);
     }
   };
 
@@ -133,9 +155,13 @@ export const AdminProducts: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <img 
-                        src={product.images?.[0] || product.image || 'https://via.placeholder.com/50'} 
+                        src={product.images?.length ? getFirstImage(product.images) : getImageUrl(product.image)} 
                         alt={product.name} 
                         className="h-12 w-12 rounded-lg object-cover border-2 border-gray-100" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-product.svg';
+                        }}
                       />
                       <div>
                         <p className="font-bold text-gray-800">{product.name}</p>
@@ -159,19 +185,27 @@ export const AdminProducts: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                      product.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      product.isAvailable && product.stock > 0 
+                        ? 'bg-green-100 text-green-700' 
+                        : !product.isAvailable 
+                        ? 'bg-gray-100 text-gray-700'
+                        : 'bg-red-100 text-red-700'
                     }`}>
-                      {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                      {!product.isAvailable ? 'Hidden' : product.stock > 0 ? 'Visible' : 'Out of Stock'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
                       <button 
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" 
-                        title="View Product"
-                        onClick={() => toast.info('View details coming soon')}
+                        onClick={() => toggleProductVisibility(product._id, product.isAvailable)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          product.isAvailable 
+                            ? 'text-green-600 hover:bg-green-100' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title={product.isAvailable ? 'Hide from users' : 'Show to users'}
                       >
-                        <Eye className="h-5 w-5" />
+                        {product.isAvailable ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                       </button>
                       <button
                         onClick={() => deleteProductHandler(product._id)}

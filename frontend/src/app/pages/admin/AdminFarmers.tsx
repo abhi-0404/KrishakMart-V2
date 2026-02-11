@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Mail, Phone, MapPin, Calendar, MoreVertical, Trash2, Ban, CheckCircle, Users } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, Calendar, Trash2, Ban, CheckCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
+import API from '../../../services/api';
 
 interface Farmer {
   _id: string;
@@ -56,8 +57,18 @@ export const AdminFarmers: React.FC = () => {
 
   const deleteFarmer = async (id: string) => {
     const farmer = farmers.find(f => f._id === id);
-    if (confirm(`Are you sure you want to delete farmer ${farmer?.name}?`)) {
-      toast.info('Delete functionality will be implemented soon');
+    
+    if (!confirm(`Are you sure you want to delete farmer "${farmer?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await API.delete(`/admin/users/${id}`);
+      toast.success('Farmer deleted successfully');
+      fetchFarmers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete farmer');
+      console.error(error);
     }
   };
 

@@ -62,7 +62,7 @@ export const AdminAddProduct: React.FC = () => {
       formData.append('stock', product.stock);
       formData.append('description', product.description);
       if (product.usage) formData.append('usage', product.usage);
-      if (imageFile) formData.append('image', imageFile);
+      if (imageFile) formData.append('images', imageFile); // Changed from 'image' to 'images'
 
       await createProduct(formData);
       toast.success('Admin product added successfully!');

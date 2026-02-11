@@ -45,6 +45,7 @@ const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ 
 const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })));
 const AdminOwnProducts = lazy(() => import('./pages/admin/AdminOwnProducts').then(m => ({ default: m.AdminOwnProducts })));
 const AdminAddProduct = lazy(() => import('./pages/admin/AdminAddProduct').then(m => ({ default: m.AdminAddProduct })));
+const AdminEditProduct = lazy(() => import('./pages/admin/AdminEditProduct').then(m => ({ default: m.AdminEditProduct })));
 const AdminOwnEarnings = lazy(() => import('./pages/admin/AdminOwnEarnings').then(m => ({ default: m.AdminOwnEarnings })));
 
 
@@ -435,6 +436,18 @@ function AppContent() {
               <DashboardLayout>
                 <Suspense fallback={<LoadingFallback />}>
                   <AdminAddProduct />
+                </Suspense>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/edit-product/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminEditProduct />
                 </Suspense>
               </DashboardLayout>
             </ProtectedRoute>

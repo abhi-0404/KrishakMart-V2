@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Store, Mail, Phone, MapPin, CheckCircle, XCircle, Info, MoreVertical, Ban } from 'lucide-react';
+import { Search, Store, Mail, MapPin, CheckCircle, Ban, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
+import API from '../../../services/api';
 
 interface ShopOwner {
   _id: string;
@@ -50,6 +51,23 @@ export const AdminShopOwners: React.FC = () => {
       fetchShopOwners();
     } catch (error) {
       toast.error('Failed to update shop status');
+      console.error(error);
+    }
+  };
+
+  const deleteShopOwner = async (id: string) => {
+    const shop = shopOwners.find(s => s._id === id);
+    
+    if (!confirm(`Are you sure you want to delete "${shop?.shopName || shop?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await API.delete(`/admin/users/${id}`);
+      toast.success('Shop owner deleted successfully');
+      fetchShopOwners();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete shop owner');
       console.error(error);
     }
   };
@@ -157,8 +175,12 @@ export const AdminShopOwners: React.FC = () => {
                       >
                         {!owner.isBlocked ? <Ban className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
                       </button>
-                      <button className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
-                        <Info className="h-5 w-5" />
+                      <button 
+                        onClick={() => deleteShopOwner(owner._id)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                        title="Delete Shop Owner"
+                      >
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   </td>

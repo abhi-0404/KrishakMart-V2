@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getAllUsers,
   toggleBlockUser,
+  deleteUser,
   getAllOrders,
   getAllProducts,
   getDashboardStats,
@@ -15,6 +16,7 @@ router.use(protect);
 
 router.get('/users', authorize('admin'), getAllUsers);
 router.put('/users/:id/block', authorize('admin'), toggleBlockUser);
+router.delete('/users/:id', authorize('admin'), deleteUser);
 router.get('/orders', authorize('admin'), getAllOrders);
 router.get('/products', authorize('admin'), getAllProducts);
 router.get('/stats', authorize('admin'), getDashboardStats);

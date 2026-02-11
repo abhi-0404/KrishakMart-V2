@@ -60,6 +60,48 @@ export const toggleBlockUser = async (req, res) => {
   }
 };
 
+// @desc    Delete user
+// @route   DELETE /api/admin/users/:id
+// @access  Private (Admin)
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Prevent deleting admin users
+    if (user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot delete admin users'
+      });
+    }
+
+    // Delete user's products if shop owner
+    if (user.role === 'shopOwner') {
+      await Product.deleteMany({ sellerId: user._id });
+    }
+
+    // Delete the user
+    await user.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Get all orders
 // @route   GET /api/admin/orders
 // @access  Private (Admin)
