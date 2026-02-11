@@ -9,8 +9,8 @@ import { useNavigate } from 'react-router-dom';
 interface DashboardStats {
   totalProducts: number;
   ordersToday: number;
-  todayEarnings: number;
-  monthlyEarnings: number;
+  pendingDeliveries: number;
+  totalEarnings: number;
 }
 
 export const ShopOwnerDashboard: React.FC = () => {
@@ -19,8 +19,8 @@ export const ShopOwnerDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     ordersToday: 0,
-    todayEarnings: 0,
-    monthlyEarnings: 0
+    pendingDeliveries: 0,
+    totalEarnings: 0
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
@@ -55,18 +55,21 @@ export const ShopOwnerDashboard: React.FC = () => {
         .filter((order: any) => order.orderStatus === 'Delivered')
         .reduce((sum: number, order: any) => sum + order.totalAmount, 0);
 
-      // Get current month earnings
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const monthlyEarning = earnings.monthlyEarnings.find(
-        (m: any) => m._id.month === currentMonth + 1 && m._id.year === currentYear
-      );
+      // Calculate pending deliveries (Pending + Accepted orders)
+      const pendingDeliveries = orders.filter((order: any) => 
+        order.orderStatus === 'Pending' || order.orderStatus === 'Accepted'
+      ).length;
+
+      // Calculate total earnings (all delivered orders)
+      const totalEarnings = orders
+        .filter((order: any) => order.orderStatus === 'Delivered')
+        .reduce((sum: number, order: any) => sum + order.totalAmount, 0);
 
       setStats({
         totalProducts: products.length,
         ordersToday: todayOrders.length,
-        todayEarnings: todayEarnings,
-        monthlyEarnings: monthlyEarning ? monthlyEarning.earnings : earnings.totalEarnings
+        pendingDeliveries: pendingDeliveries,
+        totalEarnings: totalEarnings
       });
 
       // Set recent orders (last 5)
@@ -117,7 +120,7 @@ export const ShopOwnerDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Shop Owner Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Seller Dashboard</h1>
         <p className="text-gray-600">Monitor your shop's performance</p>
       </div>
 
@@ -148,12 +151,12 @@ export const ShopOwnerDashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-200">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-orange-100 p-4 rounded-xl">
-              <DollarSign className="h-8 w-8 text-orange-600" />
+              <ShoppingBag className="h-8 w-8 text-orange-600" />
             </div>
             <TrendingUp className="h-5 w-5 text-orange-600" />
           </div>
-          <p className="text-gray-600 text-sm mb-1">Today's Earnings</p>
-          <p className="text-3xl font-bold text-gray-800">₹{stats.todayEarnings.toLocaleString()}</p>
+          <p className="text-gray-600 text-sm mb-1">Pending Deliveries</p>
+          <p className="text-3xl font-bold text-gray-800">{stats.pendingDeliveries}</p>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-purple-200">
@@ -163,8 +166,8 @@ export const ShopOwnerDashboard: React.FC = () => {
             </div>
             <TrendingUp className="h-5 w-5 text-purple-600" />
           </div>
-          <p className="text-gray-600 text-sm mb-1">Monthly Earnings</p>
-          <p className="text-3xl font-bold text-gray-800">₹{stats.monthlyEarnings.toLocaleString()}</p>
+          <p className="text-gray-600 text-sm mb-1">Total Earnings</p>
+          <p className="text-3xl font-bold text-gray-800">₹{stats.totalEarnings.toLocaleString()}</p>
         </div>
       </div>
 

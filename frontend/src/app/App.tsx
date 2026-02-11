@@ -38,15 +38,21 @@ const ShopOwnerProfile = lazy(() => import('./pages/shop-owner/ShopOwnerProfile'
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({
+// Protected Route Component with Shop Owner restrictions
+const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[]; blockShopOwner?: boolean }> = ({
   children,
   allowedRoles,
+  blockShopOwner = false,
 }) => {
   const { user } = useApp();
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Block shop owners from buyer-only pages
+  if (blockShopOwner && user.role === 'shopOwner') {
+    return <Navigate to="/shop-owner/dashboard" replace />;
   }
 
   if (!allowedRoles.includes(user.role)) {
@@ -134,17 +140,21 @@ function AppContent() {
         <Route
           path="/cart"
           element={
-            <PublicLayout>
-              <CartPage />
-            </PublicLayout>
+            <ProtectedRoute allowedRoles={['farmer', 'admin']} blockShopOwner={true}>
+              <PublicLayout>
+                <CartPage />
+              </PublicLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/checkout"
           element={
-            <PublicLayout>
-              <CheckoutPage />
-            </PublicLayout>
+            <ProtectedRoute allowedRoles={['farmer', 'admin']} blockShopOwner={true}>
+              <PublicLayout>
+                <CheckoutPage />
+              </PublicLayout>
+            </ProtectedRoute>
           }
         />
         <Route

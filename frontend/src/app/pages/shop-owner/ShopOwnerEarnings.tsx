@@ -37,7 +37,7 @@ export const ShopOwnerEarnings: React.FC = () => {
       
       // Filter only completed/delivered orders for earnings
       const completedOrders = orders.filter((order: any) => 
-        order.status === 'delivered' || order.status === 'completed'
+        order.orderStatus === 'Delivered'
       );
 
       // Calculate today's earnings
@@ -117,7 +117,7 @@ export const ShopOwnerEarnings: React.FC = () => {
           orderId: order._id,
           amount: order.totalAmount,
           date: new Date(order.createdAt).toLocaleDateString('en-IN'),
-          status: order.status === 'delivered' ? 'Completed' : order.status
+          status: 'Completed'
         }));
       setRecentTransactions(recent);
 

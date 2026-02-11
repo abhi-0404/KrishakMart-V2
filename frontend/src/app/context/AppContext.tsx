@@ -47,8 +47,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
-  const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  const [language, setLanguageState] = useState<'en' | 'hi'>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved === 'hi' ? 'hi' : 'en') as 'en' | 'hi';
+  });
   const [loading, setLoading] = useState(false);
+
+  const setLanguage = (lang: 'en' | 'hi') => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+    console.log('Language changed to:', lang);
+  };
 
   // Load user from localStorage on mount
   useEffect(() => {
