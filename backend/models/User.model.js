@@ -48,6 +48,11 @@ const userSchema = new mongoose.Schema({
   shopAddress: String,
   shopDescription: String,
   gstNumber: String,
+  shopLocation: {
+    latitude: Number,
+    longitude: Number,
+    address: String
+  },
   
   // Common fields
   avatar: String,

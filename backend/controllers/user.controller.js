@@ -5,10 +5,10 @@ import User from '../models/User.model.js';
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, shopName, shopAddress, shopDescription, gstNumber } = req.body;
+    const { name, email, shopName, shopAddress, shopDescription, gstNumber, shopLocation } = req.body;
 
     console.log('Updating profile for user:', req.user._id);
-    console.log('Update data:', { name, email, shopName, shopAddress, shopDescription, gstNumber });
+    console.log('Update data:', { name, email, shopName, shopAddress, shopDescription, gstNumber, shopLocation });
 
     const user = await User.findById(req.user._id);
 
@@ -29,6 +29,7 @@ export const updateProfile = async (req, res) => {
       if (shopAddress !== undefined) user.shopAddress = shopAddress || null;
       if (shopDescription !== undefined) user.shopDescription = shopDescription || null;
       if (gstNumber !== undefined) user.gstNumber = gstNumber || null;
+      if (shopLocation !== undefined) user.shopLocation = shopLocation;
     }
 
     // Save without triggering password hash
