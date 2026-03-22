@@ -75,14 +75,14 @@ export const HomePage: React.FC = () => {
             {user?.role !== 'shopOwner' && (
               <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 md:gap-4">
                 <Link to="/shop" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-[#2f7c4f] hover:bg-green-50 text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 gap-2 md:gap-3 font-semibold">
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-[#2f7c4f] hover:bg-green-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 gap-2 md:gap-3 font-semibold">
                     <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                     Shop Farming Products
                   </Button>
                 </Link>
                 <Link to="/become-seller" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-[#2f7c4f] text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 gap-2 md:gap-3 font-semibold">
-                    <Store className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-[#2f7c4f] hover:bg-green-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 gap-2 md:gap-3 font-semibold">
+                    <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                     Become a Seller
                   </Button>
                 </Link>

@@ -21,6 +21,6 @@ router.get('/orders', authorize('admin'), getAllOrders);
 router.get('/products', authorize('admin'), getAllProducts);
 router.get('/stats', authorize('admin'), getDashboardStats);
 router.get('/seller/:id/earnings', authorize('admin', 'shopOwner'), getSellerEarnings);
-router.get('/seller/earnings', authorize('shopOwner'), getSellerEarnings);
+router.get('/seller/earnings', authorize('admin', 'shopOwner'), getSellerEarnings);
 
 export default router;

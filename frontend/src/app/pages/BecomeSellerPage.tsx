@@ -23,8 +23,8 @@ export const BecomeSellerPage: React.FC = () => {
 
         {/* Benefits */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center">
-            <div className="bg-green-100 p-4 rounded-xl inline-block mb-4">
+          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center hover:border-green-500 hover:shadow-lg transition-all duration-300 group overflow-hidden">
+            <div className="bg-green-100 p-4 rounded-xl inline-block mb-4 group-hover:scale-105 transition-transform duration-300">
               <Users className="h-10 w-10 text-green-600" />
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-3">Reach More Farmers</h3>
@@ -33,8 +33,8 @@ export const BecomeSellerPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center">
-            <div className="bg-blue-100 p-4 rounded-xl inline-block mb-4">
+          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center hover:border-green-500 hover:shadow-lg transition-all duration-300 group overflow-hidden">
+            <div className="bg-blue-100 p-4 rounded-xl inline-block mb-4 group-hover:scale-105 transition-transform duration-300">
               <DollarSign className="h-10 w-10 text-blue-600" />
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-3">Grow Your Revenue</h3>
@@ -43,8 +43,8 @@ export const BecomeSellerPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center">
-            <div className="bg-orange-100 p-4 rounded-xl inline-block mb-4">
+          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center hover:border-green-500 hover:shadow-lg transition-all duration-300 group overflow-hidden">
+            <div className="bg-orange-100 p-4 rounded-xl inline-block mb-4 group-hover:scale-105 transition-transform duration-300">
               <Store className="h-10 w-10 text-orange-600" />
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-3">Easy to Manage</h3>
@@ -53,8 +53,8 @@ export const BecomeSellerPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center">
-            <div className="bg-purple-100 p-4 rounded-xl inline-block mb-4">
+          <div className="bg-white rounded-xl p-8 shadow-md border-2 border-green-200 text-center hover:border-green-500 hover:shadow-lg transition-all duration-300 group overflow-hidden">
+            <div className="bg-purple-100 p-4 rounded-xl inline-block mb-4 group-hover:scale-105 transition-transform duration-300">
               <TrendingUp className="h-10 w-10 text-purple-600" />
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-3">Business Growth</h3>
@@ -68,34 +68,20 @@ export const BecomeSellerPage: React.FC = () => {
         <div className="bg-white rounded-2xl p-12 shadow-lg border-2 border-green-200 mb-16">
           <h2 className="text-3xl font-bold text-gray-800 text-center mb-12">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                1
+            {[
+              { step: '1', title: 'Register', desc: 'Sign up with your shop details and documents' },
+              { step: '2', title: 'List Products', desc: 'Add your farming products with details and prices' },
+              { step: '3', title: 'Receive Orders', desc: 'Get orders from farmers in your area' },
+              { step: '4', title: 'Earn & Grow', desc: 'Deliver products and grow your business' },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="text-center bg-green-50 rounded-xl p-6 border-2 border-green-100 hover:border-green-500 hover:shadow-lg transition-all duration-300 group">
+                <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4 group-hover:scale-105 transition-transform duration-300">
+                  {step}
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+                <p className="text-gray-600">{desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Register</h3>
-              <p className="text-gray-600">Sign up with your shop details and documents</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">List Products</h3>
-              <p className="text-gray-600">Add your farming products with details and prices</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                3
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Receive Orders</h3>
-              <p className="text-gray-600">Get orders from farmers in your area</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                4
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Earn & Grow</h3>
-              <p className="text-gray-600">Deliver products and grow your business</p>
-            </div>
+            ))}
           </div>
         </div>
 

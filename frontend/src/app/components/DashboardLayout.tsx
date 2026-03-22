@@ -17,6 +17,8 @@ import {
   Menu,
   X,
   Home,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -28,6 +30,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -65,14 +68,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const getMenuItems = () => {
     if (!user) return [];
     switch (user.role) {
-      case 'farmer':
-        return getFarmerMenuItems();
-      case 'shopOwner':
-        return getShopOwnerMenuItems();
-      case 'admin':
-        return getAdminMenuItems();
-      default:
-        return [];
+      case 'farmer': return getFarmerMenuItems();
+      case 'shopOwner': return getShopOwnerMenuItems();
+      case 'admin': return getAdminMenuItems();
+      default: return [];
     }
   };
 
@@ -80,19 +79,38 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const title =
     (user?.role === 'farmer' && 'Farmer Dashboard') ||
-    (user?.role === 'shopOwner' && 'Shop Owner Dashboard') ||
+    (user?.role === 'shopOwner' && 'Shop Owner') ||
     (user?.role === 'admin' && 'Admin Panel') ||
     'Dashboard';
 
+  const sidebarW = collapsed ? 'w-[72px]' : 'w-72';
+  const mainML = collapsed ? 'md:ml-[72px]' : 'md:ml-72';
+
+  const NavItem = ({ item, onClick }: { item: typeof menuItems[0]; onClick?: () => void }) => {
+    const Icon = item.icon;
+    const isActive = location.pathname === item.path;
+    return (
+      <Link to={item.path} onClick={onClick} title={collapsed ? item.label : undefined}>
+        <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+          isActive ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
+        } ${collapsed ? 'justify-center' : ''}`}>
+          <Icon className="h-5 w-5 flex-shrink-0" />
+          {!collapsed && <span className="font-medium text-sm truncate">{item.label}</span>}
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex">
+
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b-2 border-green-200 shadow-sm">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-green-200 shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-lg border-2 border-green-200 text-green-700 hover:bg-green-50 transition-colors"
+            className="p-2 rounded-xl border border-green-200 text-green-700 hover:bg-green-50 transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -106,85 +124,88 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-72 bg-white border-r-2 border-green-200 shadow-lg fixed left-0 top-0 h-screen overflow-y-auto">
-        <div className="p-6 border-b-2 border-green-200">
-          <h2 className="text-2xl font-bold text-green-700">{title}</h2>
-          <p className="text-sm text-gray-600 mt-1">Welcome, {user?.name}</p>
+      <aside className={`hidden md:flex flex-col ${sidebarW} bg-white border-r border-green-200 shadow-md fixed left-0 top-0 h-screen overflow-hidden transition-all duration-300 z-20`}>
+
+        {/* Header */}
+        <div className={`flex items-center border-b border-green-100 p-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+          {!collapsed && (
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-green-700 truncate">{title}</h2>
+              <p className="text-xs text-gray-500 truncate">Welcome, {user?.name}</p>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="p-1.5 rounded-lg text-gray-400 hover:bg-green-50 hover:text-green-700 transition-colors flex-shrink-0"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {user?.role === 'shopOwner' && (
-            <Link to="/">
-              <div className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-green-100 border-2 border-green-200 mb-4">
-                <Home className="h-5 w-5" />
-                <span className="font-medium">Back to Home</span>
+            <Link to="/" title={collapsed ? 'Back to Home' : undefined}>
+              <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-gray-600 hover:bg-green-50 hover:text-green-700 border border-green-100 mb-2 ${collapsed ? 'justify-center' : ''}`}>
+                <Home className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && <span className="font-medium text-sm">Back to Home</span>}
               </div>
             </Link>
           )}
 
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link key={item.path} to={item.path}>
-                <div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-green-600 text-white shadow-md'
-                      : 'text-gray-700 hover:bg-green-100'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              </Link>
-            );
-          })}
-
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="w-full justify-start gap-3 px-4 py-3 mt-4 text-red-600 hover:bg-red-50 hover:text-red-700"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="font-medium">Logout</span>
-          </Button>
+          {menuItems.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
         </nav>
+
+        {/* Logout */}
+        <div className="p-3 border-t border-green-100">
+          <button
+            onClick={handleLogout}
+            title={collapsed ? 'Logout' : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-all ${collapsed ? 'justify-center' : ''}`}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="font-medium text-sm">Logout</span>}
+          </button>
+        </div>
       </aside>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile overlay */}
       <div
         className={`fixed inset-0 z-40 bg-black/40 transition-opacity md:hidden ${
           mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={() => setMobileOpen(false)}
       />
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r-2 border-green-200 shadow-lg overflow-y-auto transform transition-transform md:hidden ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="p-5 border-b-2 border-green-200 flex items-center justify-between">
+
+      {/* Mobile Sidebar drawer */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-green-200 shadow-lg flex flex-col overflow-hidden transform transition-transform md:hidden ${
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="p-4 border-b border-green-100 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-green-700">{title}</h2>
-            <p className="text-xs text-gray-600 mt-1">Welcome, {user?.name}</p>
+            <h2 className="text-base font-bold text-green-700">{title}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Welcome, {user?.name}</p>
           </div>
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="p-2 rounded-lg border-2 border-green-200 text-green-700 hover:bg-green-50 transition-colors"
+            className="p-2 rounded-xl border border-green-200 text-green-700 hover:bg-green-50 transition-colors"
             aria-label="Close menu"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {user?.role === 'shopOwner' && (
             <Link to="/" onClick={() => setMobileOpen(false)}>
-              <div className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-green-100 border-2 border-green-200 mb-4">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-gray-600 hover:bg-green-50 hover:text-green-700 border border-green-100 mb-2">
                 <Home className="h-5 w-5" />
-                <span className="font-medium">Back to Home</span>
+                <span className="font-medium text-sm">Back to Home</span>
               </div>
             </Link>
           )}
@@ -194,36 +215,30 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             const isActive = location.pathname === item.path;
             return (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
-                <div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-green-600 text-white shadow-md'
-                      : 'text-gray-700 hover:bg-green-100'
-                  }`}
-                >
+                <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
+                  isActive ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
+                }`}>
                   <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </div>
               </Link>
             );
           })}
+        </nav>
 
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setMobileOpen(false);
-              handleLogout();
-            }}
-            className="w-full justify-start gap-3 px-4 py-3 mt-4 text-red-600 hover:bg-red-50 hover:text-red-700"
+        <div className="p-3 border-t border-green-100">
+          <button
+            onClick={() => { setMobileOpen(false); handleLogout(); }}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
           >
             <LogOut className="h-5 w-5" />
-            <span className="font-medium">Logout</span>
-          </Button>
-        </nav>
+            <span className="font-medium text-sm">Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-0 md:ml-72 p-4 sm:p-6 md:p-8 pt-20 md:pt-8 overflow-y-auto">
+      <main className={`flex-1 ml-0 ${mainML} p-4 sm:p-6 md:p-8 pt-20 md:pt-8 overflow-y-auto transition-all duration-300`}>
         {children}
       </main>
     </div>
