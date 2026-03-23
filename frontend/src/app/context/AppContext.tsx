@@ -39,6 +39,7 @@ interface AppContextType {
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
   loading: boolean;
+  authReady: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,12 +47,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [wishlist, setWishlist] = useState<Product[]>(() => {
+    // Load guest wishlist from localStorage on init
+    try {
+      const saved = localStorage.getItem('guestWishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [language, setLanguageState] = useState<'en' | 'hi'>(() => {
     const saved = localStorage.getItem('language');
     return (saved === 'hi' ? 'hi' : 'en') as 'en' | 'hi';
   });
   const [loading, setLoading] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   const setLanguage = (lang: 'en' | 'hi') => {
     setLanguageState(lang);
@@ -59,37 +67,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     console.log('Language changed to:', lang);
   };
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount — restore session for ALL roles
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    const persistSession = localStorage.getItem('persistSession');
-    
+
     if (token && savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
-        
-        // Only auto-login if persistSession is true (admin only)
-        if (persistSession === 'true') {
-          setUser(parsedUser);
-          // Fetch cart and wishlist if farmer
-          if (parsedUser.role === 'farmer') {
-            fetchCart();
-            fetchWishlist();
-          }
-        } else {
-          // Clear localStorage for non-persistent sessions
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('persistSession');
+        setUser(parsedUser);
+        if (parsedUser.role === 'farmer') {
+          fetchCart();
+          fetchWishlist();
         }
-      } catch (error) {
-        console.error('Error loading user:', error);
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        localStorage.removeItem('persistSession');
       }
     }
+    setAuthReady(true); // always mark ready, whether user found or not
   }, []);
 
   const login = async (credentials: { phone: string; password: string }) => {
@@ -102,20 +98,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Mark session type - only admin gets persistent session
-      if (userData.role === 'admin') {
-        localStorage.setItem('persistSession', 'true');
-      } else {
-        localStorage.setItem('persistSession', 'false');
-      }
-      
+
       setUser(userData);
       
       // Fetch cart and wishlist if farmer
       if (userData.role === 'farmer') {
         await fetchCart();
         await fetchWishlist();
+        // Clear guest wishlist from localStorage after login
+        localStorage.removeItem('guestWishlist');
       }
       
       toast.success('Login successful!');
@@ -131,7 +122,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('persistSession');
     setUser(null);
     setCart([]);
     setWishlist([]);
@@ -229,7 +219,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addToWishlist = async (product: Product) => {
     if (!user) {
-      toast.error('Please login to add items to wishlist');
+      // Guest: store in localStorage
+      setWishlist(prev => {
+        if (prev.find(p => p._id === product._id)) return prev;
+        const updated = [...prev, product];
+        localStorage.setItem('guestWishlist', JSON.stringify(updated));
+        return updated;
+      });
+      toast.success('Added to wishlist');
       return;
     }
 
@@ -249,6 +246,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const removeFromWishlist = async (productId: string) => {
+    if (!user) {
+      // Guest: remove from localStorage
+      setWishlist(prev => {
+        const updated = prev.filter(p => p._id !== productId);
+        localStorage.setItem('guestWishlist', JSON.stringify(updated));
+        return updated;
+      });
+      toast.success('Removed from wishlist');
+      return;
+    }
+
     try {
       await API.delete(`/wishlist/${productId}`);
       setWishlist((prevWishlist) => prevWishlist.filter((p) => p._id !== productId));
@@ -277,6 +285,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         language,
         setLanguage,
         loading,
+        authReady,
       }}
     >
       {children}

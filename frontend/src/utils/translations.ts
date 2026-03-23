@@ -14,7 +14,8 @@ export const translations = {
     editProfile: 'Edit Profile',
     myOrders: 'My Orders',
     wishlist: 'Wishlist',
-    
+    language: 'Language',
+
     // Support Dialog
     sendMessage: 'Send us a Message',
     yourName: 'Your Name',
@@ -24,12 +25,27 @@ export const translations = {
     message: 'Message',
     howCanWeHelp: 'How can we help you?',
     sendMessageBtn: 'Send Message',
-    
-    // HomePage - Shop Owner
+
+    // HomePage
+    welcomeFarmer: 'Welcome Back, Farmer!',
+    welcomeShopOwner: 'Welcome Back, Shop Owner!',
+    ordersHappening: "Here's what's happening with your orders",
+    cartItems: 'Cart Items',
+    wishlistItems: 'Wishlist Items',
+    availableProducts: 'Available Products',
+    moreProducts: 'More Products',
+    noProductsAvailable: 'No products available yet',
+    loadingProducts: 'Loading products...',
+    shopNow: 'Shop Now',
+    becomeSeller: 'Become a Seller',
+    heroTitle: 'Fresh Farm Products Delivered to Your Door',
+    heroSubtitle: 'Connect directly with local farmers and shop owners for the freshest produce at the best prices.',
+
+    // Shop Owner
     myProductsSection: 'My Products',
     viewAll: 'View All',
     addFirstProduct: 'Add Your First Product',
-    noProducts: 'You haven\'t added any products yet',
+    noProducts: "You haven't added any products yet",
     edit: 'Edit',
     pendingOrdersSection: 'Pending Orders',
     viewAllOrders: 'View All Orders',
@@ -39,14 +55,20 @@ export const translations = {
     items: 'items',
     total: 'Total',
     viewDetails: 'View Details',
-    
+    addProduct: 'Add Product',
+    earnings: 'Earnings',
+    ordersReceived: 'Orders Received',
+
     // Status badges
     pending: 'Pending',
     accepted: 'Accepted',
+    packed: 'Packed',
+    shipped: 'Shipped',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
-    
-    // Login Page
+    rejected: 'Rejected',
+
+    // Login / Signup
     farmer: 'Farmer',
     shopOwner: 'Shop Owner',
     password: 'Password',
@@ -54,15 +76,92 @@ export const translations = {
     loginAsFarmer: 'Login as Farmer',
     loginAsShopOwner: 'Login as Shop Owner',
     loggingIn: 'Logging in...',
-    dontHaveAccount: 'Don\'t have an account?',
+    dontHaveAccount: "Don't have an account?",
     demoAdminLogin: 'Demo Admin Login',
     selectLanguage: 'Select Language',
-    
+    phoneNumber: 'Phone Number',
+    enterPhone: 'Enter 10-digit mobile number',
+    fullName: 'Full Name',
+    enterName2: 'Enter your full name',
+    createAccount: 'Create Account',
+    alreadyHaveAccount: 'Already have an account?',
+    signupAsFarmer: 'Sign up as Farmer',
+    signupAsShopOwner: 'Sign up as Shop Owner',
+
+    // Profile
+    myProfile: 'My Profile',
+    shopProfile: 'Shop Profile',
+    manageAccount: 'Manage your account information',
+    manageShop: 'Manage your shop information',
+    phone: 'Phone',
+    email: 'Email',
+    memberSince: 'Member Since',
+    accountStatus: 'Account Status',
+    active: 'Active',
+    verified: 'Verified',
+    pendingVerification: 'Pending Verification',
+    editInformation: 'Edit Information',
+    saveChanges: 'Save Changes',
+    saving: 'Saving...',
+    phoneCannotChange: 'Phone number cannot be changed',
+    emailOptional: 'Enter your email (optional)',
+
+    // Orders
+    myOrdersTitle: 'My Orders',
+    trackOrders: 'Track and manage your orders',
+    noOrdersYet: 'No orders placed yet',
+    loadingOrders: 'Loading orders...',
+    orderNumber: 'Order #',
+    placedOn: 'Placed on',
+    deliveryAddress: 'Delivery Address',
+    paymentMethod: 'Payment Method',
+    totalAmount: 'Total Amount',
+    quantity: 'Quantity',
+
+    // Cart
+    myCart: 'My Cart',
+    emptyCart: 'Your cart is empty',
+    proceedToCheckout: 'Proceed to Checkout',
+    removeFromCart: 'Remove',
+    cartTotal: 'Cart Total',
+
+    // Products
+    inStock: 'In Stock',
+    lowStock: 'Low Stock',
+    outOfStock: 'Out of Stock',
+    addToCart: 'Add to Cart',
+    addToWishlist: 'Add to Wishlist',
+    price: 'Price',
+    category: 'Category',
+    description: 'Description',
+
+    // Admin
+    adminDashboard: 'Admin Dashboard',
+    totalUsers: 'Total Users',
+    totalProducts: 'Total Products',
+    totalOrders: 'Total Orders',
+    totalRevenue: 'Total Revenue',
+    manageUsers: 'Manage Users',
+    manageProducts: 'Manage Products',
+    manageOrders: 'Manage Orders',
+
     // Common
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
+    cancel: 'Cancel',
+    save: 'Save',
+    delete: 'Delete',
+    confirm: 'Confirm',
+    back: 'Back',
+    next: 'Next',
+    search: 'Search',
+    filter: 'Filter',
+    noResults: 'No results found',
+    notProvided: 'Not provided',
+    notSet: 'Not set',
   },
+
   hi: {
     // Navbar
     home: 'होम',
@@ -78,7 +177,8 @@ export const translations = {
     editProfile: 'प्रोफ़ाइल संपादित करें',
     myOrders: 'मेरे ऑर्डर',
     wishlist: 'विशलिस्ट',
-    
+    language: 'भाषा',
+
     // Support Dialog
     sendMessage: 'हमें संदेश भेजें',
     yourName: 'आपका नाम',
@@ -88,8 +188,23 @@ export const translations = {
     message: 'संदेश',
     howCanWeHelp: 'हम आपकी कैसे मदद कर सकते हैं?',
     sendMessageBtn: 'संदेश भेजें',
-    
-    // HomePage - Shop Owner
+
+    // HomePage
+    welcomeFarmer: 'वापस स्वागत है, किसान!',
+    welcomeShopOwner: 'वापस स्वागत है, दुकान मालिक!',
+    ordersHappening: 'आपके ऑर्डर की स्थिति यहाँ है',
+    cartItems: 'कार्ट आइटम',
+    wishlistItems: 'विशलिस्ट आइटम',
+    availableProducts: 'उपलब्ध उत्पाद',
+    moreProducts: 'और उत्पाद',
+    noProductsAvailable: 'अभी कोई उत्पाद उपलब्ध नहीं है',
+    loadingProducts: 'उत्पाद लोड हो रहे हैं...',
+    shopNow: 'अभी खरीदें',
+    becomeSeller: 'विक्रेता बनें',
+    heroTitle: 'ताज़े खेत के उत्पाद आपके दरवाज़े तक',
+    heroSubtitle: 'स्थानीय किसानों और दुकान मालिकों से सीधे जुड़ें और सबसे ताज़े उत्पाद सबसे अच्छी कीमत पर पाएं।',
+
+    // Shop Owner
     myProductsSection: 'मेरे उत्पाद',
     viewAll: 'सभी देखें',
     addFirstProduct: 'अपना पहला उत्पाद जोड़ें',
@@ -103,14 +218,20 @@ export const translations = {
     items: 'आइटम',
     total: 'कुल',
     viewDetails: 'विवरण देखें',
-    
+    addProduct: 'उत्पाद जोड़ें',
+    earnings: 'कमाई',
+    ordersReceived: 'प्राप्त ऑर्डर',
+
     // Status badges
     pending: 'लंबित',
     accepted: 'स्वीकृत',
+    packed: 'पैक किया',
+    shipped: 'भेजा गया',
     delivered: 'वितरित',
     cancelled: 'रद्द',
-    
-    // Login Page
+    rejected: 'अस्वीकृत',
+
+    // Login / Signup
     farmer: 'किसान',
     shopOwner: 'दुकान मालिक',
     password: 'पासवर्ड',
@@ -121,12 +242,89 @@ export const translations = {
     dontHaveAccount: 'खाता नहीं है?',
     demoAdminLogin: 'डेमो एडमिन लॉगिन',
     selectLanguage: 'भाषा चुनें',
-    
+    phoneNumber: 'फ़ोन नंबर',
+    enterPhone: '10 अंकों का मोबाइल नंबर दर्ज करें',
+    fullName: 'पूरा नाम',
+    enterName2: 'अपना पूरा नाम दर्ज करें',
+    createAccount: 'खाता बनाएं',
+    alreadyHaveAccount: 'पहले से खाता है?',
+    signupAsFarmer: 'किसान के रूप में साइन अप करें',
+    signupAsShopOwner: 'दुकान मालिक के रूप में साइन अप करें',
+
+    // Profile
+    myProfile: 'मेरी प्रोफ़ाइल',
+    shopProfile: 'दुकान प्रोफ़ाइल',
+    manageAccount: 'अपनी खाता जानकारी प्रबंधित करें',
+    manageShop: 'अपनी दुकान की जानकारी प्रबंधित करें',
+    phone: 'फ़ोन',
+    email: 'ईमेल',
+    memberSince: 'सदस्य बने',
+    accountStatus: 'खाता स्थिति',
+    active: 'सक्रिय',
+    verified: 'सत्यापित',
+    pendingVerification: 'सत्यापन लंबित',
+    editInformation: 'जानकारी संपादित करें',
+    saveChanges: 'परिवर्तन सहेजें',
+    saving: 'सहेजा जा रहा है...',
+    phoneCannotChange: 'फ़ोन नंबर नहीं बदला जा सकता',
+    emailOptional: 'ईमेल दर्ज करें (वैकल्पिक)',
+
+    // Orders
+    myOrdersTitle: 'मेरे ऑर्डर',
+    trackOrders: 'अपने ऑर्डर ट्रैक और प्रबंधित करें',
+    noOrdersYet: 'अभी तक कोई ऑर्डर नहीं दिया',
+    loadingOrders: 'ऑर्डर लोड हो रहे हैं...',
+    orderNumber: 'ऑर्डर #',
+    placedOn: 'दिनांक',
+    deliveryAddress: 'डिलीवरी पता',
+    paymentMethod: 'भुगतान विधि',
+    totalAmount: 'कुल राशि',
+    quantity: 'मात्रा',
+
+    // Cart
+    myCart: 'मेरी कार्ट',
+    emptyCart: 'आपकी कार्ट खाली है',
+    proceedToCheckout: 'चेकआउट करें',
+    removeFromCart: 'हटाएं',
+    cartTotal: 'कार्ट कुल',
+
+    // Products
+    inStock: 'स्टॉक में',
+    lowStock: 'कम स्टॉक',
+    outOfStock: 'स्टॉक खत्म',
+    addToCart: 'कार्ट में जोड़ें',
+    addToWishlist: 'विशलिस्ट में जोड़ें',
+    price: 'कीमत',
+    category: 'श्रेणी',
+    description: 'विवरण',
+
+    // Admin
+    adminDashboard: 'एडमिन डैशबोर्ड',
+    totalUsers: 'कुल उपयोगकर्ता',
+    totalProducts: 'कुल उत्पाद',
+    totalOrders: 'कुल ऑर्डर',
+    totalRevenue: 'कुल राजस्व',
+    manageUsers: 'उपयोगकर्ता प्रबंधित करें',
+    manageProducts: 'उत्पाद प्रबंधित करें',
+    manageOrders: 'ऑर्डर प्रबंधित करें',
+
     // Common
     loading: 'लोड हो रहा है...',
     error: 'त्रुटि',
     success: 'सफलता',
-  }
+    cancel: 'रद्द करें',
+    save: 'सहेजें',
+    delete: 'हटाएं',
+    confirm: 'पुष्टि करें',
+    back: 'वापस',
+    next: 'अगला',
+    search: 'खोजें',
+    filter: 'फ़िल्टर',
+    noResults: 'कोई परिणाम नहीं मिला',
+    notProvided: 'प्रदान नहीं किया',
+    notSet: 'सेट नहीं',
+  },
 };
 
 export type TranslationKey = keyof typeof translations.en;
+export type Language = keyof typeof translations;

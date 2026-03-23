@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Toaster } from './components/ui/sonner';
 
@@ -7,6 +7,7 @@ import { Toaster } from './components/ui/sonner';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { DashboardLayout } from './components/DashboardLayout';
+import { FarmerLayout } from './components/FarmerLayout';
 
 // Error Boundary
 class ErrorBoundary extends React.Component<
@@ -57,6 +58,7 @@ const BecomeSellerPage = lazy(() => import('./pages/BecomeSellerPage').then(m =>
 
 // Farmer Pages
 const FarmerDashboard = lazy(() => import('./pages/farmer/FarmerDashboard').then(m => ({ default: m.FarmerDashboard })));
+const FarmerStorePage = lazy(() => import('./pages/farmer/FarmerStorePage').then(m => ({ default: m.FarmerStorePage })));
 const FarmerOrders = lazy(() => import('./pages/farmer/FarmerOrders').then(m => ({ default: m.FarmerOrders })));
 const FarmerWishlist = lazy(() => import('./pages/farmer/FarmerWishlist').then(m => ({ default: m.FarmerWishlist })));
 const FarmerProfile = lazy(() => import('./pages/farmer/FarmerProfile').then(m => ({ default: m.FarmerProfile })));
@@ -83,19 +85,36 @@ const AdminEditProduct = lazy(() => import('./pages/admin/AdminEditProduct').the
 const AdminOwnEarnings = lazy(() => import('./pages/admin/AdminOwnEarnings').then(m => ({ default: m.AdminOwnEarnings })));
 
 
+// Redirect logged-in users away from login/signup
+const GuestOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, authReady } = useApp();
+  if (!authReady) return <LoadingFallback />;
+  if (user) {
+    switch (user.role) {
+      case 'farmer': return <Navigate to="/farmer/store" replace />;
+      case 'shopOwner': return <Navigate to="/shop-owner/dashboard" replace />;
+      case 'admin': return <Navigate to="/admin/dashboard" replace />;
+      default: return <Navigate to="/" replace />;
+    }
+  }
+  return <>{children}</>;
+};
+
 // Protected Route Component with Shop Owner restrictions
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[]; blockShopOwner?: boolean }> = ({
   children,
   allowedRoles,
   blockShopOwner = false,
 }) => {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+
+  // Wait for auth to be restored from localStorage before redirecting
+  if (!authReady) return <LoadingFallback />;
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Block shop owners from buyer-only pages
   if (blockShopOwner && user.role === 'shopOwner') {
     return <Navigate to="/shop-owner/dashboard" replace />;
   }
@@ -109,22 +128,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string
 
 // Profile Redirect Component
 const ProfileRedirect: React.FC = () => {
-  const { user } = useApp();
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Redirect to role-specific profile page
+  const { user, authReady } = useApp();
+  if (!authReady) return <LoadingFallback />;
+  if (!user) return <Navigate to="/login" replace />;
   switch (user.role) {
-    case 'farmer':
-      return <Navigate to="/farmer/profile" replace />;
-    case 'shopOwner':
-      return <Navigate to="/shop-owner/profile" replace />;
-    case 'admin':
-      return <Navigate to="/admin/dashboard" replace />;
-    default:
-      return <Navigate to="/" replace />;
+    case 'farmer': return <Navigate to="/farmer/store" replace />;
+    case 'shopOwner': return <Navigate to="/shop-owner/profile" replace />;
+    case 'admin': return <Navigate to="/admin/dashboard" replace />;
+    default: return <Navigate to="/" replace />;
   }
 };
 
@@ -153,19 +164,34 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   );
 };
 
+// Home route: redirect farmers to /farmer/store, others see HomePage
+const HomeRoute: React.FC = () => {
+  const { user, authReady } = useApp();
+  if (!authReady) return <LoadingFallback />;
+  if (user?.role === 'farmer') return <Navigate to="/farmer/store" replace />;
+  return (
+    <PublicLayout>
+      <Suspense fallback={<LoadingFallback />}>
+        <HomePage />
+      </Suspense>
+    </PublicLayout>
+  );
+};
+
+// Scroll to top on every route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
+
 function AppContent() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
-        <Route
-          path="/"
-          element={
-            <PublicLayout>
-              <HomePage />
-            </PublicLayout>
-          }
-        />
+        <Route path="/" element={<HomeRoute />} />
         <Route
           path="/shop"
           element={
@@ -194,9 +220,11 @@ function AppContent() {
           path="/cart"
           element={
             <ProtectedRoute allowedRoles={['farmer', 'admin']} blockShopOwner={true}>
-              <PublicLayout>
-                <CartPage />
-              </PublicLayout>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <CartPage />
+                </Suspense>
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -204,9 +232,11 @@ function AppContent() {
           path="/checkout"
           element={
             <ProtectedRoute allowedRoles={['farmer', 'admin']} blockShopOwner={true}>
-              <PublicLayout>
-                <CheckoutPage />
-              </PublicLayout>
+              <DashboardLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <CheckoutPage />
+                </Suspense>
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -234,8 +264,16 @@ function AppContent() {
             </PublicLayout>
           }
         />
-        <Route path="/login" element={<Suspense fallback={<LoadingFallback />}><LoginPage /></Suspense>} />
-        <Route path="/signup/:userType" element={<Suspense fallback={<LoadingFallback />}><SignupPage /></Suspense>} />
+        <Route path="/login" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <GuestOnlyRoute><LoginPage /></GuestOnlyRoute>
+          </Suspense>
+        } />
+        <Route path="/signup/:userType" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <GuestOnlyRoute><SignupPage /></GuestOnlyRoute>
+          </Suspense>
+        } />
 
         {/* Profile Route - accessible to all logged-in users */}
         <Route
@@ -253,6 +291,16 @@ function AppContent() {
         />
 
         {/* Farmer Routes */}
+        <Route
+          path="/farmer/store"
+          element={
+            <ProtectedRoute allowedRoles={['farmer']}>
+              <FarmerLayout>
+                <FarmerStorePage />
+              </FarmerLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/farmer/dashboard"
           element={
