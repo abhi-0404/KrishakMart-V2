@@ -6,7 +6,7 @@ export interface Product {
   category: string;
   brand: string;
   price: number;
-  image?: string; // For backward compatibility
+  image?: string;
   images: string[];
   sellerId: {
     _id: string;
@@ -14,6 +14,7 @@ export interface Product {
     shopName?: string;
   };
   rating?: number;
+  numReviews?: number;
   stock: number;
   description: string;
   usage?: string;

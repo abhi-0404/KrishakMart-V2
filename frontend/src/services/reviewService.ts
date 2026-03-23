@@ -3,10 +3,7 @@ import API from './api';
 export interface Review {
   _id: string;
   productId: string;
-  farmerId: {
-    _id: string;
-    name: string;
-  };
+  farmerId: { _id: string; name: string } | string;
   farmerName: string;
   rating: number;
   comment: string;
@@ -19,24 +16,25 @@ export interface AddReviewData {
   comment: string;
 }
 
-// Add review for a product
 export const addReview = async (productId: string, reviewData: AddReviewData) => {
-  try {
-    const { data } = await API.post(`/reviews/${productId}`, reviewData);
-    return data.data;
-  } catch (error) {
-    console.error('Error adding review:', error);
-    throw error;
-  }
+  const { data } = await API.post(`/reviews/${productId}`, reviewData);
+  return data.data;
 };
 
-// Get reviews for a product
-export const getProductReviews = async (productId: string) => {
+export const getProductReviews = async (productId: string): Promise<Review[]> => {
+  const { data } = await API.get(`/reviews/${productId}`);
+  return data.data;
+};
+
+export const checkCanReview = async (productId: string): Promise<{
+  canReview: boolean;
+  hasPurchased: boolean;
+  alreadyReviewed: boolean;
+}> => {
   try {
-    const { data } = await API.get(`/reviews/${productId}`);
+    const { data } = await API.get(`/reviews/${productId}/can-review`);
     return data.data;
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    throw error;
+  } catch {
+    return { canReview: false, hasPurchased: false, alreadyReviewed: false };
   }
 };
