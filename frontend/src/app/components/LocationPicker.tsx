@@ -6,6 +6,9 @@ export interface LocationData {
   latitude: number;
   longitude: number;
   address: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
 }
 
 interface LocationPickerProps {
@@ -15,20 +18,36 @@ interface LocationPickerProps {
   placeholder?: string;
 }
 
-// ── Nominatim helpers (no API key) ───────────────────────────────────────────
-const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
+interface GeoResult {
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+}
+
+const reverseGeocode = async (lat: number, lon: number): Promise<GeoResult> => {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`,
       { headers: { 'Accept-Language': 'en' } }
     );
     const d = await res.json();
-    if (!d.display_name) return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-    // Shorten: keep first 3 meaningful parts
+    if (!d.display_name) return { address: `${lat.toFixed(5)}, ${lon.toFixed(5)}`, city: '', state: '', pincode: '' };
+
+    const a = d.address || {};
+    // City: try multiple Nominatim fields in priority order
+    const city = a.city || a.town || a.village || a.county || a.district || a.suburb || '';
+    // State: Nominatim returns "state" for Indian states
+    const state = a.state || '';
+    // Pincode
+    const pincode = a.postcode || '';
+    // Short display address: first 4 meaningful parts
     const parts = d.display_name.split(', ');
-    return parts.slice(0, 5).join(', ');
+    const address = parts.slice(0, 4).join(', ');
+
+    return { address, city, state, pincode };
   } catch {
-    return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    return { address: `${lat.toFixed(5)}, ${lon.toFixed(5)}`, city: '', state: '', pincode: '' };
   }
 };
 
@@ -48,7 +67,10 @@ const LocationModal: React.FC<{
 }> = ({ initial, onConfirm, onClose }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
-  const [address, setAddress] = useState(initial?.address || '');
+  const [geoResult, setGeoResult] = useState<GeoResult | null>(
+    initial?.address ? { address: initial.address, city: initial.city || '', state: initial.state || '', pincode: initial.pincode || '' } : null
+  );
+  const address = geoResult?.address || '';
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
     initial?.latitude ? { lat: initial.latitude, lon: initial.longitude } : null
   );
@@ -69,8 +91,8 @@ const LocationModal: React.FC<{
     setLoadingAddr(true);
     if (moveTimer.current) clearTimeout(moveTimer.current);
     moveTimer.current = setTimeout(async () => {
-      const addr = await reverseGeocode(lat, lon);
-      setAddress(addr);
+      const result = await reverseGeocode(lat, lon);
+      setGeoResult(result);
       setLoadingAddr(false);
     }, 600);
   }, []);
@@ -141,8 +163,8 @@ const LocationModal: React.FC<{
         const lon = pos.coords.longitude;
         flyTo(lat, lon, 17);
         setLoadingAddr(true);
-        const addr = await reverseGeocode(lat, lon);
-        setAddress(addr);
+        const result = await reverseGeocode(lat, lon);
+        setGeoResult(result);
         setCoords({ lat, lon });
         setLoadingAddr(false);
         setGettingGPS(false);
@@ -175,7 +197,14 @@ const LocationModal: React.FC<{
 
   const handleConfirm = () => {
     if (!coords) { toast.error('Please select a location on the map'); return; }
-    onConfirm({ latitude: coords.lat, longitude: coords.lon, address });
+    onConfirm({
+      latitude: coords.lat,
+      longitude: coords.lon,
+      address: geoResult?.address || '',
+      city: geoResult?.city || '',
+      state: geoResult?.state || '',
+      pincode: geoResult?.pincode || '',
+    });
   };
 
   return (
@@ -299,6 +328,11 @@ const LocationModal: React.FC<{
             ) : coords ? (
               <>
                 <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2">{address || 'Getting address...'}</p>
+                {(geoResult?.city || geoResult?.state || geoResult?.pincode) && (
+                  <p className="text-[10px] text-[#2E7D32] font-medium mt-0.5">
+                    {[geoResult.city, geoResult.state, geoResult.pincode].filter(Boolean).join(' · ')}
+                  </p>
+                )}
                 <p className="text-[10px] text-gray-400 mt-0.5">{coords.lat.toFixed(6)}, {coords.lon.toFixed(6)}</p>
               </>
             ) : (
