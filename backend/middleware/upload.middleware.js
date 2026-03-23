@@ -7,6 +7,19 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
+                               process.env.CLOUDINARY_API_KEY && 
+                               process.env.CLOUDINARY_API_SECRET;
+
+const uploadDir = './uploads/products';
+
+// ONLY create local directory if Cloudinary is NOT configured
+if (!isCloudinaryConfigured) {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+}
+
 // Ensure uploads directory exists
 const uploadsDir = path.join(dirname(__dirname), 'uploads', 'products');
 if (!fs.existsSync(uploadsDir)) {
