@@ -5,16 +5,30 @@ import { ProductCard } from '../../components/ProductCard';
 import { getProducts, Product } from '../../../services/productService';
 import { Button } from '../../components/ui/button';
 import { useApp } from '../../context/AppContext';
+import { getMyOrders } from '../../../services/orderService';
 import { toast } from 'sonner';
+import { translations } from '../../../utils/translations';
 
 export const FarmerDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { cart, wishlist } = useApp();
+  const [orderCount, setOrderCount] = useState<number | null>(null);
+  const { cart, wishlist, language } = useApp();
+  const t = translations[language];
 
   useEffect(() => {
     fetchProducts();
+    fetchOrderCount();
   }, []);
+
+  const fetchOrderCount = async () => {
+    try {
+      const data = await getMyOrders();
+      setOrderCount(data.length);
+    } catch {
+      setOrderCount(0);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -32,8 +46,8 @@ export const FarmerDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back, Farmer!</h1>
-        <p className="text-gray-600">Here's what's happening with your orders</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t.welcomeFarmer}</h1>
+        <p className="text-gray-600">{t.ordersHappening}</p>
       </div>
 
       {/* Quick Stats */}
@@ -41,7 +55,7 @@ export const FarmerDashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">Cart Items</p>
+              <p className="text-gray-600 text-sm mb-1">{t.cartItems}</p>
               <p className="text-3xl font-bold text-gray-800">{cart.length}</p>
             </div>
             <div className="bg-green-100 p-4 rounded-xl">
@@ -50,24 +64,24 @@ export const FarmerDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-200">
+        <Link to="/farmer/orders" className="block bg-white rounded-xl p-6 shadow-md border-2 border-orange-200 hover:border-orange-400 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">My Orders</p>
+              <p className="text-gray-600 text-sm mb-1">{t.myOrders}</p>
               <p className="text-3xl font-bold text-gray-800">
-                <Link to="/farmer/orders" className="hover:text-orange-600">View</Link>
+                {orderCount === null ? '...' : orderCount}
               </p>
             </div>
             <div className="bg-orange-100 p-4 rounded-xl">
               <Package className="h-8 w-8 text-orange-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-red-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">Wishlist Items</p>
+              <p className="text-gray-600 text-sm mb-1">{t.wishlistItems}</p>
               <p className="text-3xl font-bold text-gray-800">{wishlist.length}</p>
             </div>
             <div className="bg-red-100 p-4 rounded-xl">
@@ -80,21 +94,21 @@ export const FarmerDashboard: React.FC = () => {
       {/* Recently Viewed */}
       <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Available Products</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t.availableProducts}</h2>
           <Link to="/shop">
             <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 gap-2">
-              View All
+              {t.viewAll}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">Loading products...</p>
+            <p className="text-gray-600">{t.loadingProducts}</p>
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">No products available yet</p>
+            <p className="text-gray-600">{t.noProductsAvailable}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -108,7 +122,7 @@ export const FarmerDashboard: React.FC = () => {
       {/* Recommended Products */}
       {!loading && products.length > 3 && (
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">More Products</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">{t.moreProducts}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.slice(3, 6).map((product) => (
               <ProductCard key={product._id} product={product} />
