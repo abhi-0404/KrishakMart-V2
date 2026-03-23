@@ -26,10 +26,19 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
+      // Token expired or invalid — force re-login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    }
+    if (error.response?.status === 403) {
+      const msg = error.response?.data?.message || '';
+      // Role mismatch — stale token from a different account
+      if (msg.toLowerCase().includes('not authorized') || msg.toLowerCase().includes('role')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

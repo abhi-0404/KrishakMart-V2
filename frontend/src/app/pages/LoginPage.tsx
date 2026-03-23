@@ -19,7 +19,7 @@ const MobileField: React.FC<{
   onChange: (v: string) => void;
   accentColor: string;
 }> = ({ value, onChange, accentColor }) => {
-  const valid = /^[6-9]\d{9}$/.test(value);
+  const valid = /^\d{10}$/.test(value);
   const touched = value.length > 0;
   return (
     <div>
@@ -45,7 +45,7 @@ const MobileField: React.FC<{
         )}
       </div>
       {touched && !valid && value.length > 0 && (
-        <p className="text-xs text-red-500 mt-1">Enter a valid 10-digit Indian mobile number</p>
+        <p className="text-xs text-red-500 mt-1">Enter a valid 10-digit mobile number</p>
       )}
     </div>
   );
@@ -108,12 +108,17 @@ export const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^[6-9]\d{9}$/.test(mobile)) { toast.error('Enter a valid 10-digit mobile number'); return; }
+    if (!/^\d{10}$/.test(mobile)) { toast.error('Enter a valid 10-digit mobile number'); return; }
     setLoading(true);
     try {
       await login({ phone: mobile, password });
       toast.success('Welcome back!');
-      navigate(isFarmer ? '/farmer/store' : '/shop-owner/dashboard');
+      // Read role from localStorage — login() writes it there before returning
+      const savedUser = localStorage.getItem('user');
+      const role = savedUser ? JSON.parse(savedUser).role : null;
+      if (role === 'admin') navigate('/admin/dashboard');
+      else if (role === 'shopOwner') navigate('/shop-owner/dashboard');
+      else navigate('/farmer/store');
     } catch (error: any) {
       const status = error.response?.status;
       const msg = error.response?.data?.message || '';

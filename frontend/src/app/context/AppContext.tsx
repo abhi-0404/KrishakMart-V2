@@ -75,6 +75,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (token && savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
+        // Validate token hasn't expired by checking its payload
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          // Token expired — clear and force re-login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setAuthReady(true);
+          return;
+        }
         setUser(parsedUser);
         if (parsedUser.role === 'farmer') {
           fetchCart();
@@ -85,12 +94,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.removeItem('user');
       }
     }
-    setAuthReady(true); // always mark ready, whether user found or not
+    setAuthReady(true);
   }, []);
 
   const login = async (credentials: { phone: string; password: string }) => {
     try {
       setLoading(true);
+      // Always clear any existing session before logging in
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
       const { data } = await API.post('/auth/login', credentials);
       
       const userData = data.data.user;
