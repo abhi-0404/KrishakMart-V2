@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { MapPin, Phone, User, Package, Calendar, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../../context/AppContext';
+import { getImageUrl } from '../../../utils/imageUtils';
 
 export const ShopOwnerOrders: React.FC = () => {
   const { user } = useApp();
@@ -179,12 +180,11 @@ export const ShopOwnerOrders: React.FC = () => {
             {order.products.map((item: any, index: number) => (
               <div key={index} className="flex gap-4 p-3 bg-gray-50 rounded-lg">
                 <img
-                  src={item.image}
+                  src={getImageUrl(item.image)}
                   alt={item.productName}
                   className="w-16 h-16 object-cover rounded-lg"
                   onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-product.svg';
+                    (e.target as HTMLImageElement).src = '/placeholder-product.svg';
                   }}
                 />
                 <div className="flex-1">
