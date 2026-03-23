@@ -50,6 +50,7 @@ const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage').then(
 const ShopPage = lazy(() => import('./pages/ShopPage').then(m => ({ default: m.ShopPage })));
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('./pages/SignupPage').then(m => ({ default: m.SignupPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
@@ -232,11 +233,9 @@ function AppContent() {
           path="/checkout"
           element={
             <ProtectedRoute allowedRoles={['farmer', 'admin']} blockShopOwner={true}>
-              <DashboardLayout>
-                <Suspense fallback={<LoadingFallback />}>
-                  <CheckoutPage />
-                </Suspense>
-              </DashboardLayout>
+              <Suspense fallback={<LoadingFallback />}>
+                <CheckoutPage />
+              </Suspense>
             </ProtectedRoute>
           }
         />

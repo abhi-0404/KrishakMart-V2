@@ -521,6 +521,7 @@ const ShopOwnerSignup: React.FC<{
   const [shopName, setShopName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const stepTitles = ['Your Identity', 'Your Location', 'Business Details', 'Set Password'];
   const stepSubtitles = ['Tell us who you are', 'Where is your shop?', 'Verify your business', 'Secure your account'];
@@ -534,6 +535,7 @@ const ShopOwnerSignup: React.FC<{
 
   const handleSubmit = async () => {
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+    if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
     setLoading(true);
     try {
       await API.post('/auth/register', {
@@ -692,6 +694,35 @@ const ShopOwnerSignup: React.FC<{
             {step === 3 && (
               <div className="space-y-4">
                 <PasswordField value={password} onChange={setPassword} />
+                <div>
+                  <label htmlFor="so-confirm-pw" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="so-confirm-pw"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      className={`w-full px-4 py-3 pr-10 rounded-xl border text-sm outline-none transition-colors ${
+                        confirmPassword.length > 0
+                          ? confirmPassword === password
+                            ? 'border-green-400 bg-green-50 focus:border-green-500'
+                            : 'border-red-400 bg-red-50 focus:border-red-500'
+                          : 'border-gray-200 bg-white focus:border-[#FF9800]'
+                      }`}
+                    />
+                    {confirmPassword.length > 0 && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+                        {confirmPassword === password ? '✅' : '❌'}
+                      </span>
+                    )}
+                  </div>
+                  {confirmPassword.length > 0 && confirmPassword !== password && (
+                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400">Use at least 6 characters with a mix of letters and numbers.</p>
               </div>
             )}
@@ -710,7 +741,7 @@ const ShopOwnerSignup: React.FC<{
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
-                <button type="button" onClick={handleSubmit} disabled={loading || password.length < 6}
+                <button type="button" onClick={handleSubmit} disabled={loading || password.length < 6 || password !== confirmPassword}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#FF9800] hover:bg-orange-500 active:scale-95 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                   {loading ? (
                     <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Creating...</>
