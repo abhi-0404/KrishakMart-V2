@@ -156,7 +156,7 @@ export const createProduct = async (req, res) => {
       images,
       sellerId: req.user._id,
       shopOwner: seller.shopName || seller.name,
-      isAvailable: parseInt(stock) > 0
+      isAvailable: true
     };
 
     console.log('Creating product with final data:', productData);
@@ -264,7 +264,7 @@ export const updateProduct = async (req, res) => {
       description: req.body.description,
       usage: req.body.usage || '',
       images,
-      isAvailable: parseInt(req.body.stock) > 0
+      isAvailable: product.isAvailable  // preserve existing availability, don't auto-change on edit
     };
 
     console.log('Final update data:', updateData);
@@ -368,7 +368,7 @@ export const updateStock = async (req, res) => {
     }
 
     product.stock = stock;
-    product.isAvailable = stock > 0;
+    // Don't auto-toggle availability — shop owner controls that separately
     await product.save();
 
     res.json({
