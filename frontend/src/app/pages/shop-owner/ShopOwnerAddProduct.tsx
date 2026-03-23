@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, IndianRupee, FileText, ImagePlus, Save, X, Upload, Tag, Layers, BookOpen } from 'lucide-react';
+import { Package, IndianRupee, FileText, ImagePlus, Save, X, Tag, Layers, BookOpen, Upload, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -15,48 +15,175 @@ import {
 import { categories, createProduct } from '../../../services/productService';
 import { toast } from 'sonner';
 
+const MAX_IMAGES = 5;
+const MAX_SIZE_MB = 2;
+const ACCEPTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+// ── ImageUploader component ───────────────────────────────────────────────────
+interface ImageEntry { file: File; preview: string; }
+
+const ImageUploader: React.FC<{
+  images: ImageEntry[];
+  onChange: (imgs: ImageEntry[]) => void;
+}> = ({ images, onChange }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const processFiles = useCallback((files: FileList | null) => {
+    if (!files) return;
+    const incoming = Array.from(files);
+
+    // Validate each file
+    const valid: File[] = [];
+    for (const file of incoming) {
+      if (!ACCEPTED.includes(file.type)) {
+        toast.error(`${file.name}: only JPG, PNG, WEBP allowed`); continue;
+      }
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.error(`${file.name}: exceeds ${MAX_SIZE_MB}MB limit`); continue;
+      }
+      valid.push(file);
+    }
+
+    const slots = MAX_IMAGES - images.length;
+    if (slots <= 0) { toast.error(`You can only upload up to ${MAX_IMAGES} images`); return; }
+    if (valid.length > slots) {
+      toast.error(`You can only upload up to ${MAX_IMAGES} images`);
+    }
+    const toAdd = valid.slice(0, slots);
+    if (toAdd.length === 0) return;
+
+    // Build previews
+    const newEntries: ImageEntry[] = [];
+    let loaded = 0;
+    toAdd.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        newEntries.push({ file, preview: e.target?.result as string });
+        loaded++;
+        if (loaded === toAdd.length) {
+          onChange([...images, ...newEntries]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [images, onChange]);
+
+  const remove = (idx: number) => onChange(images.filter((_, i) => i !== idx));
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false);
+    processFiles(e.dataTransfer.files);
+  };
+
+  const slots = MAX_IMAGES - images.length;
+  const filled = images.length;
+
+  return (
+    <div className="space-y-3">
+      {/* Drop zone — hidden when full */}
+      {filled < MAX_IMAGES && (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all duration-200
+            ${dragging
+              ? 'border-[#2E7D32] bg-green-50 scale-[1.01]'
+              : 'border-gray-200 hover:border-[#2E7D32] hover:bg-green-50/50'}`}
+        >
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${dragging ? 'bg-[#2E7D32]' : 'bg-green-100'}`}>
+            <Upload className={`h-5 w-5 ${dragging ? 'text-white' : 'text-[#2E7D32]'}`} />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-700">
+              {dragging ? 'Drop images here' : 'Click or drag & drop images'}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              JPG, PNG, WEBP · max {MAX_SIZE_MB}MB each · {slots} slot{slots !== 1 ? 's' : ''} remaining
+            </p>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            multiple
+            accept={ACCEPTED.join(',')}
+            className="hidden"
+            onChange={e => { processFiles(e.target.files); e.target.value = ''; }}
+          />
+        </div>
+      )}
+
+      {/* Thumbnail grid — always 5 slots visible */}
+      <div className="grid grid-cols-5 gap-2">
+        {Array.from({ length: MAX_IMAGES }).map((_, idx) => {
+          const entry = images[idx];
+          return entry ? (
+            /* Filled slot */
+            <div key={idx} className="relative group aspect-square">
+              <img
+                src={entry.preview}
+                alt={`Image ${idx + 1}`}
+                className="w-full h-full object-cover rounded-xl border-2 border-[#2E7D32]/30"
+              />
+              {/* Primary badge on first image */}
+              {idx === 0 && (
+                <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-[#2E7D32] text-white px-1.5 py-0.5 rounded-md leading-none">
+                  Cover
+                </span>
+              )}
+              {/* Remove button */}
+              <button
+                type="button"
+                onClick={() => remove(idx)}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-3 w-3" />
+              </button>
+              {/* Checkmark overlay */}
+              <div className="absolute inset-0 rounded-xl bg-black/0 group-hover:bg-black/10 transition-colors" />
+            </div>
+          ) : (
+            /* Empty slot */
+            <button
+              key={idx}
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-[#2E7D32]/50 hover:bg-green-50/50 flex items-center justify-center transition-all group"
+            >
+              <ImagePlus className="h-5 w-5 text-gray-300 group-hover:text-[#2E7D32]/50 transition-colors" />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Counter */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-gray-400">
+          {filled === 0
+            ? 'No images selected — at least 1 required'
+            : `${filled} / ${MAX_IMAGES} image${filled !== 1 ? 's' : ''} selected`}
+        </p>
+        {filled > 0 && (
+          <div className="flex items-center gap-1 text-xs text-[#2E7D32] font-medium">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            First image is the cover photo
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const ShopOwnerAddProduct: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageEntry[]>([]);
   const [product, setProduct] = useState({
-    name: '',
-    category: '',
-    brand: '',
-    price: '',
-    stock: '',
-    description: '',
-    usage: '',
+    name: '', category: '', brand: '',
+    price: '', stock: '', description: '', usage: '',
   });
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) { toast.error(`${file.name} is not an image`); return false; }
-      if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} exceeds 5MB`); return false; }
-      return true;
-    });
-
-    if (selectedImages.length + validFiles.length > 5) { toast.error('Maximum 5 images allowed'); return; }
-
-    const newImages = [...selectedImages, ...validFiles];
-    setSelectedImages(newImages);
-
-    const newPreviews = [...imagePreviews];
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => { newPreviews.push(e.target?.result as string); setImagePreviews([...newPreviews]); };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeImage = (index: number) => {
-    setSelectedImages(selectedImages.filter((_, i) => i !== index));
-    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +193,7 @@ export const ShopOwnerAddProduct: React.FC = () => {
     if (!product.price || parseFloat(product.price) <= 0) { toast.error('Enter a valid price'); return; }
     if (!product.stock || parseInt(product.stock) < 0) { toast.error('Enter a valid stock quantity'); return; }
     if (!product.description.trim()) { toast.error('Description is required'); return; }
+    if (images.length === 0) { toast.error('Please upload at least 1 product image'); return; }
 
     try {
       setLoading(true);
@@ -77,13 +205,12 @@ export const ShopOwnerAddProduct: React.FC = () => {
       formData.append('stock', product.stock);
       formData.append('description', product.description.trim());
       formData.append('usage', product.usage.trim());
-      selectedImages.forEach(image => formData.append('images', image));
+      images.forEach(img => formData.append('images', img.file));
 
       await createProduct(formData);
       toast.success('Product added successfully!');
       setProduct({ name: '', category: '', brand: '', price: '', stock: '', description: '', usage: '' });
-      setSelectedImages([]);
-      setImagePreviews([]);
+      setImages([]);
       navigate('/shop-owner/products');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to add product');
@@ -189,37 +316,12 @@ export const ShopOwnerAddProduct: React.FC = () => {
           {/* Image Upload */}
           <div>
             <Label className="text-sm font-medium text-gray-700">
-              Product Images <span className="text-gray-400 font-normal">(max 5)</span>
+              Product Images <span className="text-red-500">*</span>
+              <span className="text-gray-400 font-normal ml-1">(1–5 images)</span>
             </Label>
-            <div className="mt-1.5">
-              <input type="file" id="images" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
-              <label htmlFor="images"
-                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl p-6 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all duration-200">
-                <div className="bg-green-100 p-3 rounded-full">
-                  <ImagePlus className="h-5 w-5 text-green-600" />
-                </div>
-                <p className="text-sm text-gray-600 font-medium">Click to upload images</p>
-                <p className="text-xs text-gray-400">PNG, JPG up to 5MB each</p>
-              </label>
+            <div className="mt-2">
+              <ImageUploader images={images} onChange={setImages} />
             </div>
-
-            {imagePreviews.length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs text-gray-500 mb-2">{imagePreviews.length}/5 images selected</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <img src={preview} alt={`Preview ${index + 1}`}
-                        className="w-full h-16 object-cover rounded-lg border border-gray-200" />
-                      <button type="button" onClick={() => removeImage(index)}
-                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Actions */}
