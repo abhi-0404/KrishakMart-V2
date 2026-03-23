@@ -74,7 +74,10 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Health check
+// Root + Health check
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', message: 'KrishakMart API is running', version: '1.0.0' });
+});
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'KrishakMart API is running' });
 });
