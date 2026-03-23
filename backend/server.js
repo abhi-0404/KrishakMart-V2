@@ -63,6 +63,38 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   }
 }));
 
+// MongoDB Connection — cached for Vercel serverless (avoids reconnecting on every request)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/krishakmart';
+const PORT = process.env.PORT || 5000;
+
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false,       // fail fast instead of buffering
+    });
+    isConnected = true;
+    console.log('✅ MongoDB Connected');
+  } catch (err) {
+    console.error('❌ MongoDB Error:', err.message);
+    throw err;
+  }
+};
+
+// Middleware to ensure DB is connected before handling any request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch {
+    res.status(503).json({ success: false, message: 'Database unavailable. Try again.' });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -91,22 +123,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// MongoDB Connection
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/krishakmart';
-
-// Connect to MongoDB (don't block export — Vercel serverless needs the app exported immediately)
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected Successfully'))
-  .catch((error) => console.error('❌ MongoDB Connection Error:', error.message));
-
 // Local dev: start the server normally
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📍 API: http://localhost:${PORT}/api`);
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   });
 }
 
-// Vercel needs the app exported as default
 export default app;
