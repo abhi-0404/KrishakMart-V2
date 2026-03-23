@@ -32,19 +32,12 @@ export const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
-    // Check if product exists and has stock
+    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
-      });
-    }
-
-    if (product.stock < quantity) {
-      return res.status(400).json({
-        success: false,
-        message: 'Insufficient stock'
       });
     }
 
@@ -103,13 +96,10 @@ export const updateCartItem = async (req, res) => {
       });
     }
 
-    // Check stock
+    // Check product exists
     const product = await Product.findById(productId);
-    if (product.stock < quantity) {
-      return res.status(400).json({
-        success: false,
-        message: 'Insufficient stock'
-      });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
     let cart = await Cart.findOne({ farmerId: req.user._id });
