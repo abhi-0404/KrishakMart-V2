@@ -42,6 +42,15 @@ const userSchema = new mongoose.Schema({
   },
   // Farmer specific fields
   addresses: [addressSchema],
+  village: String,
+  location: {
+    latitude: Number,
+    longitude: Number,
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
+  },
   
   // Shop Owner specific fields
   shopName: String,

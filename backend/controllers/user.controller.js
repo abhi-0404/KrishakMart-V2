@@ -1,11 +1,47 @@
 import User from '../models/User.model.js';
+import { upload, uploadToCloudinary } from '../middleware/upload.middleware.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// @desc    Upload avatar
+// @route   POST /api/users/avatar
+// @access  Private
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+    let avatarUrl;
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      avatarUrl = await uploadToCloudinary(req.file);
+    } else {
+      // Save locally under uploads/avatars
+      const avatarsDir = path.join(dirname(__dirname), 'uploads', 'avatars');
+      if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
+      const filename = `avatar-${req.user._id}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const dest = path.join(avatarsDir, filename);
+      fs.writeFileSync(dest, req.file.buffer || fs.readFileSync(req.file.path));
+      if (req.file.path) fs.unlinkSync(req.file.path); // remove temp
+      avatarUrl = `/uploads/avatars/${filename}`;
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl }, { new: true });
+    res.json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, shopName, shopAddress, shopDescription, gstNumber, shopLocation } = req.body;
+    const { name, email, village, location, shopName, shopAddress, shopDescription, gstNumber, shopLocation } = req.body;
 
     console.log('Updating profile for user:', req.user._id);
     console.log('Update data:', { name, email, shopName, shopAddress, shopDescription, gstNumber, shopLocation });
@@ -22,6 +58,8 @@ export const updateProfile = async (req, res) => {
     // Update basic fields
     if (name !== undefined) user.name = name;
     if (email !== undefined) user.email = email || null;
+    if (village !== undefined) user.village = village;
+    if (location !== undefined) user.location = location;
     
     // Update shop owner specific fields
     if (user.role === 'shopOwner') {
