@@ -11,19 +11,15 @@ const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
                                process.env.CLOUDINARY_API_KEY && 
                                process.env.CLOUDINARY_API_SECRET;
 
-const uploadDir = './uploads/products';
-
-// ONLY create local directory if Cloudinary is NOT configured
-if (!isCloudinaryConfigured) {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-}
-
-// Ensure uploads directory exists
+// Only create local upload dirs in development without Cloudinary
+// Vercel's filesystem is read-only — never attempt mkdir in production
 const uploadsDir = path.join(dirname(__dirname), 'uploads', 'products');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+if (!isCloudinaryConfigured && process.env.NODE_ENV !== 'production') {
+  try {
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  } catch (e) {
+    console.warn('Could not create uploads dir:', e.message);
+  }
 }
 
 // Configure storage for local uploads
