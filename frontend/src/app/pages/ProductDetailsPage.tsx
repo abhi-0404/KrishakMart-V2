@@ -147,7 +147,7 @@ type InfoTab = 'description' | 'specs' | 'usage' | 'safety';
 export const ProductDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, addToWishlist, removeFromWishlist, wishlist, user } = useApp();
+  const { addToCart, addToWishlist, removeFromWishlist, wishlist, user, cart, updateCartQuantity } = useApp();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [suggested, setSuggested] = useState<Product[]>([]);
@@ -208,11 +208,18 @@ export const ProductDetailsPage: React.FC = () => {
     setAddedToCart(true); toast.success('Added to cart!');
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!product) return;
-    if (!user) { toast.error('Please login'); navigate('/login'); return; }
-    for (let i = 0; i < quantity; i++) addToCart(product);
-    navigate('/cart');
+    if (!user) { toast.error('Please login to continue'); navigate('/login'); return; }
+    // Add to cart (or update qty if already there), then go to checkout
+    const existing = cart.find(i => i.product._id === product._id);
+    if (existing) {
+      await updateCartQuantity(product._id, quantity);
+    } else {
+      await addToCart(product);
+      if (quantity > 1) await updateCartQuantity(product._id, quantity);
+    }
+    navigate('/checkout', { state: { buyNowIds: [product._id] } });
   };
 
   const handleWishlist = () => {
@@ -504,8 +511,8 @@ export const ProductDetailsPage: React.FC = () => {
                   <ShoppingCart className="h-5 w-5" />
                   {addedToCart ? 'Added to Cart ✓' : 'Add to Cart'}
                 </button>
-                <button onClick={handleBuyNow} disabled={product.stock === 0}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#2E7D32] hover:bg-green-800 active:scale-95 text-white font-bold text-sm py-4 rounded-2xl shadow-md transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none">
+                <button onClick={handleBuyNow}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#2E7D32] hover:bg-green-800 active:scale-95 text-white font-bold text-sm py-4 rounded-2xl shadow-md transition-all">
                   Buy Now
                 </button>
               </div>
