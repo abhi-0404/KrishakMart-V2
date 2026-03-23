@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Store, Package, ShoppingBag, TrendingUp, DollarSign } from 'lucide-react';
 import { getDashboardStats } from '../../../services/adminService';
 import { toast } from 'sonner';
@@ -50,71 +51,83 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-green-100 p-4 rounded-xl">
-              <Users className="h-8 w-8 text-green-600" />
+        <Link to="/admin/farmers">
+          <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200 hover:border-green-500 hover:shadow-lg transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-100 p-4 rounded-xl">
+                <Users className="h-8 w-8 text-green-600" />
+              </div>
+              <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <p className="text-gray-600 text-sm mb-1">Total Farmers</p>
+            <p className="text-3xl font-bold text-gray-800">{stats.totalFarmers}</p>
           </div>
-          <p className="text-gray-600 text-sm mb-1">Total Farmers</p>
-          <p className="text-3xl font-bold text-gray-800">{stats.totalFarmers}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-blue-100 p-4 rounded-xl">
-              <Store className="h-8 w-8 text-blue-600" />
+        <Link to="/admin/shop-owners">
+          <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-200 hover:border-blue-500 hover:shadow-lg transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-blue-100 p-4 rounded-xl">
+                <Store className="h-8 w-8 text-blue-600" />
+              </div>
+              <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <p className="text-gray-600 text-sm mb-1">Shop Owners</p>
+            <p className="text-3xl font-bold text-gray-800">{stats.totalSellers}</p>
           </div>
-          <p className="text-gray-600 text-sm mb-1">Shop Owners</p>
-          <p className="text-3xl font-bold text-gray-800">{stats.totalSellers}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-purple-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-purple-100 p-4 rounded-xl">
-              <Package className="h-8 w-8 text-purple-600" />
+        <Link to="/admin/products">
+          <div className="bg-white rounded-xl p-6 shadow-md border-2 border-purple-200 hover:border-purple-500 hover:shadow-lg transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-purple-100 p-4 rounded-xl">
+                <Package className="h-8 w-8 text-purple-600" />
+              </div>
+              <TrendingUp className="h-5 w-5 text-purple-600" />
             </div>
-            <TrendingUp className="h-5 w-5 text-purple-600" />
+            <p className="text-gray-600 text-sm mb-1">Total Products</p>
+            <p className="text-3xl font-bold text-gray-800">{stats.totalProducts}</p>
           </div>
-          <p className="text-gray-600 text-sm mb-1">Total Products</p>
-          <p className="text-3xl font-bold text-gray-800">{stats.totalProducts}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-orange-100 p-4 rounded-xl">
-              <ShoppingBag className="h-8 w-8 text-orange-600" />
+        <Link to="/admin/orders">
+          <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-200 hover:border-orange-500 hover:shadow-lg transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-orange-100 p-4 rounded-xl">
+                <ShoppingBag className="h-8 w-8 text-orange-600" />
+              </div>
+              <TrendingUp className="h-5 w-5 text-orange-600" />
             </div>
-            <TrendingUp className="h-5 w-5 text-orange-600" />
+            <p className="text-gray-600 text-sm mb-1">Total Orders</p>
+            <p className="text-3xl font-bold text-gray-800">{stats.totalOrders}</p>
           </div>
-          <p className="text-gray-600 text-sm mb-1">Total Orders</p>
-          <p className="text-3xl font-bold text-gray-800">{stats.totalOrders}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-green-100 p-4 rounded-xl">
-              <DollarSign className="h-8 w-8 text-green-600" />
+        <Link to="/admin/earnings">
+          <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-200 hover:border-green-500 hover:shadow-lg transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-100 p-4 rounded-xl">
+                <DollarSign className="h-8 w-8 text-green-600" />
+              </div>
+              <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <p className="text-gray-600 text-sm mb-1">Platform Revenue</p>
+            <p className="text-3xl font-bold text-gray-800">₹{stats.totalRevenue.toLocaleString()}</p>
           </div>
-          <p className="text-gray-600 text-sm mb-1">Platform Revenue</p>
-          <p className="text-3xl font-bold text-gray-800">₹{stats.totalRevenue.toLocaleString()}</p>
-        </div>
+        </Link>
 
-        <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 shadow-lg text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white/20 p-4 rounded-xl">
-              <TrendingUp className="h-8 w-8 text-white" />
+        <Link to="/admin/reports">
+          <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 shadow-lg text-white hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-white/20 p-4 rounded-xl">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
             </div>
+            <p className="text-white/80 text-sm mb-1">Platform Status</p>
+            <p className="text-3xl font-bold">Active</p>
+            <p className="text-sm text-white/70 mt-2">All systems operational</p>
           </div>
-          <p className="text-white/80 text-sm mb-1">Platform Status</p>
-          <p className="text-3xl font-bold">Active</p>
-          <p className="text-sm text-white/70 mt-2">All systems operational</p>
-        </div>
+        </Link>
       </div>
 
       {/* Welcome Message */}

@@ -133,13 +133,13 @@ export const AdminFarmers: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-bold text-gray-800">{farmer.name}</p>
-                        {farmer.email && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Mail className="h-3 w-3" /> {farmer.email}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Phone className="h-3 w-3" /> {farmer.phone}
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+                          <Phone className="h-3 w-3 text-green-600 shrink-0" />
+                          {farmer.phone}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+                          <Mail className="h-3 w-3 text-blue-500 shrink-0" />
+                          {farmer.email || <span className="italic text-gray-400">No email</span>}
                         </div>
                       </div>
                     </div>

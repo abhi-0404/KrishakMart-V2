@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Store, Mail, MapPin, CheckCircle, Ban, Trash2 } from 'lucide-react';
+import { Search, Store, Mail, Phone, MapPin, CheckCircle, Ban, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllUsers, toggleBlockUser } from '../../../services/adminService';
 import API from '../../../services/api';
@@ -136,12 +136,15 @@ export const AdminShopOwners: React.FC = () => {
                       <div>
                         <p className="font-bold text-gray-800">{owner.shopName || 'Unnamed Shop'}</p>
                         <p className="text-sm text-gray-600">Owner: {owner.name}</p>
-                        <div className="flex gap-4 mt-1">
-                          {owner.email && (
-                            <span className="flex items-center gap-1 text-xs text-gray-500">
-                              <Mail className="h-3 w-3" /> {owner.email}
-                            </span>
-                          )}
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Phone className="h-3 w-3 text-green-600" />
+                            {owner.phone || 'N/A'}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Mail className="h-3 w-3 text-blue-500" />
+                            {owner.email || <span className="italic text-gray-400">No email</span>}
+                          </span>
                         </div>
                       </div>
                     </div>
