@@ -95,15 +95,18 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/krishakmart';
 
+// Connect to MongoDB (don't block export — Vercel serverless needs the app exported immediately)
 mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected Successfully');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📍 API: http://localhost:${PORT}/api`);
-    });
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB Connection Error:', error.message);
-    process.exit(1);
+  .then(() => console.log('✅ MongoDB Connected Successfully'))
+  .catch((error) => console.error('❌ MongoDB Connection Error:', error.message));
+
+// Local dev: start the server normally
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📍 API: http://localhost:${PORT}/api`);
   });
+}
+
+// Vercel needs the app exported as default
+export default app;
