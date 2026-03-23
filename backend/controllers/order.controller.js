@@ -32,13 +32,6 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${product.name}`
-        });
-      }
-
       totalAmount += product.price * item.quantity;
       
       orderItems.push({
@@ -48,11 +41,6 @@ export const createOrder = async (req, res) => {
         price: product.price,
         image: product.images[0] || ''
       });
-
-      // Reduce stock
-      product.stock -= item.quantity;
-      product.isAvailable = product.stock > 0;
-      await product.save();
     }
 
     // Get seller ID from first product
