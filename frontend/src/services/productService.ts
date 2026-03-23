@@ -43,10 +43,10 @@ export const getProducts = async (filters?: ProductFilters) => {
     if (filters?.sellerId) params.append('sellerId', filters.sellerId);
 
     const { data } = await API.get(`/products?${params.toString()}`);
-    return data.data;
+    return data.data ?? [];
   } catch (error) {
     console.error('Error fetching products:', error);
-    throw error;
+    return [];
   }
 };
 
@@ -82,10 +82,10 @@ export const getProduct = async (id: string) => {
 export const getSellerProducts = async () => {
   try {
     const { data } = await API.get('/products/seller/my-products');
-    return data.data;
+    return data.data ?? [];
   } catch (error) {
     console.error('Error fetching seller products:', error);
-    throw error;
+    return [];
   }
 };
 
