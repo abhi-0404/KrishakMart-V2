@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingBag,
+  ShoppingCart,
   Heart,
   UserCircle,
   LogOut,
@@ -18,7 +19,6 @@ import {
   X,
   Home,
   ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -41,6 +41,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     { icon: LayoutDashboard, label: 'Dashboard', path: '/farmer/dashboard' },
     { icon: ShoppingBag, label: 'My Orders', path: '/farmer/orders' },
     { icon: Heart, label: 'Wishlist', path: '/farmer/wishlist' },
+    { icon: ShoppingCart, label: 'My Cart', path: '/cart' },
     { icon: UserCircle, label: 'Profile', path: '/farmer/profile' },
   ];
 
@@ -93,9 +94,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       <Link to={item.path} onClick={onClick} title={collapsed ? item.label : undefined}>
         <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
           isActive ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
-        } ${collapsed ? 'justify-center' : ''}`}>
-          <Icon className="h-5 w-5 flex-shrink-0" />
-          {!collapsed && <span className="font-medium text-sm truncate">{item.label}</span>}
+        }`}>
+          <span className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+            <Icon className="h-5 w-5" />
+          </span>
+          <span className={`font-medium text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'}`}>{item.label}</span>
         </div>
       </Link>
     );
@@ -124,33 +127,44 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${sidebarW} bg-white border-r border-green-200 shadow-md fixed left-0 top-0 h-screen overflow-hidden transition-all duration-300 z-20`}>
+      <aside className={`hidden md:flex flex-col ${sidebarW} bg-white border-r border-green-200 shadow-md fixed left-0 top-0 h-screen overflow-hidden transition-[width] duration-300 ease-in-out z-20`}>
 
-        {/* Header */}
-        <div className={`flex items-center border-b border-green-100 p-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          {!collapsed && (
-            <div className="min-w-0">
-              <h2 className="text-base font-bold text-green-700 truncate">{title}</h2>
-              <p className="text-xs text-gray-500 truncate">Welcome, {user?.name}</p>
-            </div>
-          )}
+        {/* All items in one scrollable nav — toggle is first item, same box as all icons */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1 pt-4">
+
+          {/* Toggle button — icon stays at exact same position always */}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-green-50 hover:text-green-700 transition-colors flex-shrink-0"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-500 hover:bg-green-50 hover:text-green-700 transition-colors mb-2"
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <span className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+              {collapsed ? <Menu className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </span>
+            <span className={`font-semibold text-sm whitespace-nowrap overflow-hidden transition-all duration-300 text-green-700 ${collapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'}`}>{title}</span>
           </button>
-        </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {/* Divider */}
+          <div className="border-t border-green-100 mb-2" />
+
+          {user?.role === 'farmer' && (
+            <Link to="/farmer/store" title={collapsed ? 'Back to Store' : undefined}>
+              <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 mb-1">
+                <span className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+                  <Home className="h-5 w-5" />
+                </span>
+                <span className={`font-medium text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'}`}>← Back to Store</span>
+              </div>
+            </Link>
+          )}
           {user?.role === 'shopOwner' && (
             <Link to="/" title={collapsed ? 'Back to Home' : undefined}>
-              <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-gray-600 hover:bg-green-50 hover:text-green-700 border border-green-100 mb-2 ${collapsed ? 'justify-center' : ''}`}>
-                <Home className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="font-medium text-sm">Back to Home</span>}
+              <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-gray-600 hover:bg-green-50 hover:text-green-700 border border-green-100 mb-1">
+                <span className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+                  <Home className="h-5 w-5" />
+                </span>
+                <span className={`font-medium text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'}`}>Back to Home</span>
               </div>
             </Link>
           )}
@@ -165,10 +179,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <button
             onClick={handleLogout}
             title={collapsed ? 'Logout' : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-all ${collapsed ? 'justify-center' : ''}`}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
           >
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium text-sm">Logout</span>}
+            <span className="h-5 w-5 flex-shrink-0 flex items-center justify-center">
+              <LogOut className="h-5 w-5" />
+            </span>
+            <span className={`font-medium text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'}`}>Logout</span>
           </button>
         </div>
       </aside>
@@ -201,6 +217,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {user?.role === 'farmer' && (
+            <Link to="/farmer/store" onClick={() => setMobileOpen(false)}>
+              <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 mb-2">
+                <Home className="h-5 w-5" />
+                <span className="font-medium text-sm">← Back to Store</span>
+              </div>
+            </Link>
+          )}
           {user?.role === 'shopOwner' && (
             <Link to="/" onClick={() => setMobileOpen(false)}>
               <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-gray-600 hover:bg-green-50 hover:text-green-700 border border-green-100 mb-2">
@@ -238,7 +262,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 ml-0 ${mainML} p-4 sm:p-6 md:p-8 pt-20 md:pt-8 overflow-y-auto transition-all duration-300`}>
+      <main className={`flex-1 ml-0 ${mainML} p-4 sm:p-6 md:p-8 pt-20 md:pt-8 overflow-y-auto transition-[margin] duration-300 ease-in-out`}>
         {children}
       </main>
     </div>

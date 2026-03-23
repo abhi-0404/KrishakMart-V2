@@ -27,26 +27,11 @@ export const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li>
-                <Link to="/" className="text-green-100 hover:text-white transition-colors text-sm">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop" className="text-green-100 hover:text-white transition-colors text-sm">
-                  Shop Products
-                </Link>
-              </li>
-              <li>
-                <Link to="/become-seller" className="text-green-100 hover:text-white transition-colors text-sm">
-                  Become a Seller
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-green-100 hover:text-white transition-colors text-sm">
-                  About Us
-                </Link>
-              </li>
+              <li><Link to="/" className="text-green-100 hover:text-white transition-colors text-sm">Home</Link></li>
+              <li><Link to="/shop" className="text-green-100 hover:text-white transition-colors text-sm">Shop Products</Link></li>
+              <li><Link to="/become-seller" className="text-green-100 hover:text-white transition-colors text-sm">Become a Seller</Link></li>
+              <li><Link to="/about" className="text-green-100 hover:text-white transition-colors text-sm">About Us</Link></li>
+              <li><Link to="/contact" className="text-green-100 hover:text-white transition-colors text-sm">Contact Us</Link></li>
             </ul>
           </div>
 
