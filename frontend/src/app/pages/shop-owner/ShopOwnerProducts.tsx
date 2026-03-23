@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Check, X } from 'lucide-react';
 import { getSellerProducts, deleteProduct, Product } from '../../../services/productService';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { getFirstImage } from '../../../utils/imageUtils';
+import API from '../../../services/api';
 
 export const ShopOwnerProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingStock, setEditingStock] = useState<string | null>(null);
+  const [stockValue, setStockValue] = useState<string>('');
 
   useEffect(() => {
     fetchProducts();
@@ -25,6 +28,31 @@ export const ShopOwnerProducts: React.FC = () => {
       toast.error('Failed to load products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startEditStock = (product: Product) => {
+    setEditingStock(product._id);
+    setStockValue(String(product.stock));
+  };
+
+  const cancelEditStock = () => {
+    setEditingStock(null);
+    setStockValue('');
+  };
+
+  const saveStock = async (productId: string) => {
+    const newStock = parseInt(stockValue, 10);
+    if (isNaN(newStock) || newStock < 0) { toast.error('Enter a valid stock number'); return; }
+    try {
+      await API.patch(`/products/${productId}/stock`, { stock: newStock });
+      setProducts(prev => prev.map(p =>
+        p._id === productId ? { ...p, stock: newStock, isAvailable: newStock > 0 } : p
+      ));
+      toast.success('Stock updated!');
+      setEditingStock(null);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update stock');
     }
   };
 
@@ -126,7 +154,38 @@ export const ShopOwnerProducts: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Stock</p>
-                      <p className="text-xl font-bold text-gray-800">{product.stock} units</p>
+                      {editingStock === product._id ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number" min="0" value={stockValue}
+                            onChange={e => setStockValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveStock(product._id); if (e.key === 'Escape') cancelEditStock(); }}
+                            className="w-20 px-2 py-1 text-sm border-2 border-[#2E7D32] rounded-lg outline-none font-bold"
+                            autoFocus
+                          />
+                          <button onClick={() => saveStock(product._id)}
+                            className="w-7 h-7 rounded-lg bg-[#2E7D32] text-white flex items-center justify-center hover:bg-green-800">
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button onClick={cancelEditStock}
+                            className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className={`text-xl font-bold ${product.stock === 0 ? 'text-red-600' : 'text-gray-800'}`}>
+                            {product.stock} units
+                          </p>
+                          {product.stock === 0 && (
+                            <span className="text-[10px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded">OUT</span>
+                          )}
+                          <button onClick={() => startEditStock(product)}
+                            className="flex items-center gap-1 text-xs text-[#2E7D32] font-semibold bg-green-50 hover:bg-green-100 px-2 py-1 rounded-lg transition-colors">
+                            <Package className="h-3 w-3" /> Update
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Category</p>
