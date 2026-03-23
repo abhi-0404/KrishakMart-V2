@@ -230,14 +230,38 @@ export const Navbar: React.FC = () => {
                         <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-gray-900 font-bold">
                           {user?.name?.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="text-white font-semibold text-sm">{user?.name}</p>
-                          <p className="text-green-200 text-xs capitalize">{user?.role === 'shopOwner' ? 'Shop Owner' : user?.role}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
+                          <p className="text-green-200 text-xs">{user?.phone}</p>
+                          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${
+                            user?.role === 'admin'
+                              ? 'bg-red-500 text-white'
+                              : user?.role === 'shopOwner'
+                              ? 'bg-yellow-400 text-gray-900'
+                              : 'bg-green-900 text-green-100'
+                          }`}>
+                            {user?.role === 'shopOwner' ? '🏪 Shop Owner' : user?.role === 'admin' ? '🛡️ Admin' : '🧑‍🌾 Farmer'}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="py-1">
+                      {/* Farmer links */}
+                      {user?.role === 'farmer' && [
+                        { icon: LayoutDashboard, label: t.dashboard, path: '/farmer/dashboard' },
+                        { icon: ShoppingBag, label: t.orders, path: '/farmer/orders' },
+                        { icon: Heart, label: 'Wishlist', path: '/farmer/wishlist' },
+                        { icon: ShoppingCart, label: t.myCart, path: '/cart' },
+                        { icon: Settings, label: 'Profile', path: '/farmer/profile' },
+                      ].map(item => (
+                        <button key={item.path}
+                          onClick={() => { navigate(item.path); setProfileOpen(false); }}
+                          className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${location.pathname === item.path ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}>
+                          <item.icon className="h-4 w-4" /> {item.label}
+                        </button>
+                      ))}
+
                       {/* Shop Owner links */}
                       {isShopOwner && [
                         { icon: LayoutDashboard, label: t.dashboard, path: '/shop-owner/dashboard' },
